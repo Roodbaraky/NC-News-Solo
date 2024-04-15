@@ -52,6 +52,28 @@ describe('/api', () => {
 });
 
 describe('/api/articles', () => {
+    test('GET 200 /api/articles', () => {
+        return request(app)
+            .get('/api/articles')
+            .expect(200)
+            .then(({ body: { articles } }) => {
+
+                articles.forEach((article) => {
+                    expect(typeof article.article_id).toBe("number")
+                    expect(typeof article.title).toBe("string")
+                    expect(typeof article.topic).toBe("string")
+                    expect(typeof article.author).toBe("string")
+                    expect(typeof article.created_at).toBe("string")
+                    expect(typeof article.votes).toBe('number')
+                    expect(typeof article.article_img_url).toBe("string")
+                    expect(typeof article.comment_count).toBe('number')
+                    expect(typeof article.body).toBe('undefined')
+                })
+                expect(articles).toBeSorted({ key: "created_at", descending: true })
+            })
+    });
+    
+
     test('GET 200 /api/articles/1', () => {
         return request(app)
             .get('/api/articles/1')
@@ -82,12 +104,12 @@ describe('/api/articles', () => {
 
     test('GET 404 /api/articles/:article_id', () => {
         return request(app)
-        .get('/api/articles/69')
-        .expect(404)
-        .then(({ body: { msg } }) => {
-            expect(msg).toBe('Not found')
+            .get('/api/articles/69')
+            .expect(404)
+            .then(({ body: { msg } }) => {
+                expect(msg).toBe('Not found')
 
-        })
+            })
     });
 
 

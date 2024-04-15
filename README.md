@@ -9,7 +9,10 @@ GET /api:
 - returns an object of the available endpoints with descriptions of their available methods, queries, example responses etc.
 
 GET /api/topics:
--returns an array of all the topic objects with slug and description properties
+- returns an array of all the topic objects with slug and description properties
 
 GET /api/articles/:article_id:
--returns an article object corresponding to the article_id passed as a parameter
+- returns an array containing article objects corresponding to the article_id passed as a parameter
+
+GET /api/articles
+- returns an array of all article objects 
