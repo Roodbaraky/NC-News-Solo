@@ -11,8 +11,11 @@ GET /api:
 GET /api/topics:
 - returns an array of all the topic objects with slug and description properties
 
-GET /api/articles/:article_id:
-- returns an array containing article objects corresponding to the article_id passed as a parameter
-
 GET /api/articles
 - returns an array of all article objects 
+
+GET /api/articles/:article_id:
+- returns an article object corresponding to the article_id passed as a parameter
+
+GET /api/articles/:article_id:
+- returns an array containing comment objects corresponding to the article_id passed as a parameter
