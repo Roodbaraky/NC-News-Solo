@@ -22,7 +22,11 @@ describe('/api/topics', () => {
             .get('/api/topics')
             .expect(200)
             .then(({ body: { topics } }) => {
-                expect(topics).toEqual(index.topicData)
+                expect(topics.length).toBe(3)
+                topics.forEach((topic) => {
+                    expect(typeof topic.description).toBe('string')
+                    expect(typeof topic.slug).toBe('string')
+                })
             })
     });
 
@@ -48,7 +52,6 @@ describe('/api', () => {
             })
     });
 
-
 });
 
 describe('/api/articles', () => {
@@ -72,14 +75,14 @@ describe('/api/articles', () => {
                 expect(articles).toBeSorted({ key: "created_at", descending: true })
             })
     });
-    
+});
 
+describe('/api/articles/:article_id', () => {
     test('GET 200 /api/articles/1', () => {
         return request(app)
             .get('/api/articles/1')
             .expect(200)
-            .then(({ body: { articles } }) => {
-                const article = articles[0]
+            .then(({ body: { article } }) => {
                 expect(article.article_id).toBe(1)
                 expect(article.title).toBe("Living in the shadow of a great man")
                 expect(article.topic).toBe("mitch")
@@ -111,6 +114,42 @@ describe('/api/articles', () => {
 
             })
     });
+});
 
+describe('/api/articles/:article_id/comments', () => {
+    test('GET 200 /api/articles/1/comments', () => {
+        return request(app)
+            .get('/api/articles/1/comments')
+            .expect(200)
+            .then(({ body: { comments } }) => {
+                expect(comments.length).toBe(11)
+                comments.forEach((comment) => {
+                    expect(typeof comment.comment_id).toBe('number')
+                    expect(typeof comment.votes).toBe('number')
+                    expect(typeof comment.created_at).toBe('string')
+                    expect(typeof comment.author).toBe('string')
+                    expect(typeof comment.body).toBe('string')
+                    expect(typeof comment.comment_id).toBe('number')
+                })
+                expect(comments).toBeSorted({ key: 'created_at', descending: true })
+            })
+    });
+
+    test('GET 404 /api/articles/69/comments', () => {
+        return request(app)
+            .get('/api/articles/69/comments')
+            .expect(404)
+            .then(({ body: { msg } }) => {
+                expect(msg).toBe('Not found')
+            })
+    })
+    test('GET 400 /api/articles/cat/comments', () => {
+        return request(app)
+            .get('/api/articles/cat/comments')
+            .expect(400)
+            .then(({ body: { msg } }) => {
+                expect(msg).toBe('Invalid input')
+            })
+    })
 
 });
