@@ -4,6 +4,7 @@ const data = require("../db/data/test-data/");
 const db = require("../db/connection");
 const seed = require("../db/seeds/seed");
 const index = require('../db/data/test-data/index')
+const endpointsData = require('../endpoints.json') 
 
 
 beforeEach(() => {
@@ -29,13 +30,32 @@ describe('GET /api/topics', () => {
         return request(app)
             .get('/api/notARoute')
             .expect(404)
-            .then(({body:{msg}}) => {
+            .then(({ body: { msg } }) => {
                 expect(msg).toBe('Not found')
             })
     });
 
-    test('', () => {
 
+});
+
+describe('GET /api', () => {
+    test('GET 200 /api', () => {
+        return request(app)
+        .get('/api')
+        .expect(200)
+        .then(({body})=>{
+            expect(body).toEqual(endpointsData)
+            expect(typeof body).toBe('object')
+        })
+    });
+
+    test('GET 404 /api/notARoute', () => {
+        return request(app)
+            .get('/api/notARoute')
+            .expect(404)
+            .then(({ body: { msg } }) => {
+                expect(msg).toBe('Not found')
+            })
     });
 
 
