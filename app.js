@@ -4,6 +4,7 @@ const { getArticlesById, getArticles, getArticleCommentsById, addArticleComments
 const { getEndpoints } = require('./controllers/endpoints.controller')
 const { getTopics } = require('./controllers/topics.controller')
 const { removeCommentById } = require('./controllers/comments.controller')
+const {getUsers} = require('./controllers/users.controller')
 const { handleCustomErrors, handlePsqlErrors, handleServerErrors, catchAll } = require('./errors/index')
 
 app.use(express.json())
@@ -13,6 +14,7 @@ app.get('/api/topics', getTopics);
 app.get('/api/articles/:article_id', getArticlesById)
 app.get('/api/articles', getArticles)
 app.get('/api/articles/:article_id/comments', getArticleCommentsById)
+app.get('/api/users', getUsers)
 
 app.post('/api/articles/:article_id/comments', addArticleCommentsById)
 
