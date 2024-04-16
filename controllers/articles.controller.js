@@ -1,10 +1,11 @@
 const express = require("express");
 const app = express();
 const index = require('../db/data/test-data/index')
-const { fetchArticles, fetchArticlesById, fetchArticleCommentsById } = require('../models/articles.model')
+const { fetchArticles, fetchArticlesById, fetchArticleCommentsById, postArticleCommentsById } = require('../models/articles.model')
+
 
 exports.getArticlesById = (req, res, next) => {
-    const {article_id} = req.params;
+    const { article_id } = req.params;
     fetchArticlesById(article_id)
         .then(([article]) => {
             res.status(200).send({ article });
@@ -21,11 +22,19 @@ exports.getArticles = (req, res, next) => {
 }
 
 exports.getArticleCommentsById = (req, res, next) => {
-    const {article_id} = req.params
+    const { article_id } = req.params
     fetchArticleCommentsById(article_id)
         .then((comments) => {
             res.status(200).send({ comments });
         })
         .catch(next)
-
+}
+exports.addArticleCommentsById = (req, res, next) => {
+    const { article_id } = req.params
+    const comment = req.body
+    postArticleCommentsById(article_id, comment)
+        .then(([comment]) => {
+            res.status(201).send({ comment })
+        })
+        .catch(next)
 }
