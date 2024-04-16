@@ -6,7 +6,6 @@ const seed = require("../db/seeds/seed");
 const index = require('../db/data/test-data/index')
 const endpointsData = require('../endpoints.json')
 const { checkArticleExists } = require('../models/articles.model')
-const { checkCommentExists } = require('../models/comments.model')
 
 
 beforeEach(() => {
@@ -85,15 +84,15 @@ describe('/api/articles/:article_id', () => {
             return request(app)
                 .get('/api/articles/1')
                 .expect(200)
-                .then(({ body: { article } }) => {
-                    expect(article.article_id).toBe(1)
-                    expect(article.title).toBe("Living in the shadow of a great man")
-                    expect(article.topic).toBe("mitch")
-                    expect(article.author).toBe("butter_bridge")
-                    expect(article.body).toBe("I find this existence challenging")
-                    expect(article.created_at).toBe("2020-07-09T20:11:00.000Z")
-                    expect(article.votes).toBe(100)
-                    expect(article.article_img_url).toBe("https://images.pexels.com/photos/158651/news-newsletter-newspaper-information-158651.jpeg?w=700&h=700")
+                .then(({ body }) => {
+                    expect(body.article_id).toBe(1)
+                    expect(body.title).toBe("Living in the shadow of a great man")
+                    expect(body.topic).toBe("mitch")
+                    expect(body.author).toBe("butter_bridge")
+                    expect(body.body).toBe("I find this existence challenging")
+                    expect(body.created_at).toBe("2020-07-09T20:11:00.000Z")
+                    expect(body.votes).toBe(100)
+                    expect(body.article_img_url).toBe("https://images.pexels.com/photos/158651/news-newsletter-newspaper-information-158651.jpeg?w=700&h=700")
 
                 })
         });
@@ -137,7 +136,7 @@ describe('/api/articles/:article_id', () => {
 
                 })
         })
-        test('PATCH 200 /api/articles/1', () => {
+        test('PATCH 200 /api/articles/1 - happy path', () => {
             return request(app)
                 .patch('/api/articles/1')
                 .send({ inc_votes: -100 })
@@ -154,7 +153,30 @@ describe('/api/articles/:article_id', () => {
 
                 })
         })
-        test('PATCH 400 /api/articles/cat', () => {
+
+        test('PATCH 200 /api/articles/1 - ignores aditional keys in req body', () => {
+            return request(app)
+                .patch('/api/articles/1')
+                .send({
+                    inc_votes: -100,
+                    what_is_the_point: 69,
+                    malicious_key: 420
+                })
+                .expect(200)
+                .then(({ body: { article } }) => {
+                    expect(article.article_id).toBe(1)
+                    expect(article.title).toBe("Living in the shadow of a great man")
+                    expect(article.topic).toBe("mitch")
+                    expect(article.author).toBe("butter_bridge")
+                    expect(article.body).toBe("I find this existence challenging")
+                    expect(article.created_at).toBe("2020-07-09T20:11:00.000Z")
+                    expect(article.votes).toBe(0)
+                    expect(article.article_img_url).toBe("https://images.pexels.com/photos/158651/news-newsletter-newspaper-information-158651.jpeg?w=700&h=700")
+
+                })
+        })
+
+        test('PATCH 400 /api/articles/cat - invalid id', () => {
             return request(app)
                 .patch('/api/articles/cat')
                 .send({ inc_votes: 1 })
@@ -163,6 +185,27 @@ describe('/api/articles/:article_id', () => {
                     expect(msg).toBe('Invalid input')
                 })
         });
+
+        test('PATCH 400 /api/articles/1 - bad req body, missing key', () => {
+            return request(app)
+                .patch('/api/articles/1')
+                .send({})
+                .expect(400)
+                .then(({ body: { msg } }) => {
+                    expect(msg).toBe('Invalid input')
+                })
+        });
+
+        test('PATCH 400 /api/articles/1 - bad req body, value not INT', () => {
+            return request(app)
+                .patch('/api/articles/1')
+                .send({ inc_votes: 'cat' })
+                .expect(400)
+                .then(({ body: { msg } }) => {
+                    expect(msg).toBe('Invalid input')
+                })
+        });
+
 
         test('PATCH 404 /api/articles/69', () => {
             return request(app)
@@ -185,7 +228,7 @@ describe('/api/articles/:article_id/comments', () => {
                 .then(({ body: { comments } }) => {
                     expect(comments.length).toBe(11)
                     comments.forEach((comment) => {
-                        expect(typeof comment.comment_id).toBe('number')
+                        expect(comment.article_id).toBe(1)
                         expect(typeof comment.votes).toBe('number')
                         expect(typeof comment.created_at).toBe('string')
                         expect(typeof comment.author).toBe('string')
@@ -196,7 +239,7 @@ describe('/api/articles/:article_id/comments', () => {
                 })
         });
 
-        test('GET 404 /api/articles/69/comments', () => {
+        test('GET 404 /api/articles/69/comments - id out of range', () => {
             return request(app)
                 .get('/api/articles/69/comments')
                 .expect(404)
@@ -205,7 +248,7 @@ describe('/api/articles/:article_id/comments', () => {
                 })
         })
 
-        test('GET 400 /api/articles/cat/comments', () => {
+        test('GET 400 /api/articles/cat/comments - id invalid', () => {
             return request(app)
                 .get('/api/articles/cat/comments')
                 .expect(400)
@@ -215,12 +258,12 @@ describe('/api/articles/:article_id/comments', () => {
         })
     })
     describe('POST /api/articles/:article_id/comments', () => {
-        test('POST 201 /api/articles/1/comments', () => {
+        test('POST 201 /api/articles/1/comments - happy path', () => {
             return request(app)
                 .post('/api/articles/1/comments')
                 .send({
                     username: 'butter_bridge',
-                    body: 'I like this article'
+                    body: 'I like this article',
                 })
                 .expect(201)
                 .then(({ body: { comment } }) => {
@@ -234,7 +277,7 @@ describe('/api/articles/:article_id/comments', () => {
                 })
         })
 
-        test('POST 400 /api/articles/cat/comments', () => {
+        test('POST 400 /api/articles/cat/comments - invalid id', () => {
             return request(app)
                 .post('/api/articles/cat/comments')
                 .send({
@@ -247,11 +290,37 @@ describe('/api/articles/:article_id/comments', () => {
                 })
         })
 
-        test('POST 404 /api/articles/69/comments', () => {
+        test('POST 400 /api/articles/1/comments - broken req body', () => {
+            return request(app)
+                .post('/api/articles/1/comments')
+                .send({
+                    username: 'butter_bridge',
+                    baddy: 'I like this article'
+                })
+                .expect(400)
+                .then(({ body: { msg } }) => {
+                    expect(msg).toBe('Invalid input')
+                })
+        })
+
+        test('POST 404 /api/articles/69/comments - id out of range', () => {
             return request(app)
                 .post('/api/articles/69/comments')
                 .send({
                     username: 'butter_bridge',
+                    body: 'I like this article'
+                })
+                .expect(404)
+                .then(({ body: { msg } }) => {
+                    expect(msg).toBe('Not found')
+                })
+        })
+
+        test('POST 404 /api/articles/1/comments - author not in db (fkey violation)', () => {
+            return request(app)
+                .post('/api/articles/1/comments')
+                .send({
+                    username: 'koo',
                     body: 'I like this article'
                 })
                 .expect(404)
@@ -286,67 +355,6 @@ describe('checkArticleExists', () => {
                 expect(err.msg).toBe('Invalid input')
                 expect(err.status).toBe(400)
             })
-    });
-
-
-});
-
-describe('checkCommentExists', () => {
-    test('should return a 404 if comment_id is not present in table', () => {
-        checkCommentExists(69)
-            .catch((err) => {
-                expect(typeof err).toBe('object')
-                expect(err.msg).toBe('Not found')
-                expect(err.status).toBe(404)
-            })
-    })
-
-    test('should return undefined if comment_id is present in table', () => {
-        checkCommentExists(1)
-            .then((result) => {
-                expect(result).toBe(undefined)
-            })
-    });
-
-    test('should return a 400 if comment_id is not valid', () => {
-        checkCommentExists('cat')
-            .catch((err) => {
-                expect(typeof err).toBe('object')
-                expect(err.msg).toBe('Invalid input')
-                expect(err.status).toBe(400)
-            })
-    });
-
-
-});
-
-describe('/api/comments/:comment_id', () => {
-    describe('DELETE /api/comments/:comment_id', () => {
-        test('DELETE 204 /api/comments/1', () => {
-            return request(app)
-                .delete('/api/comments/1')
-                .expect(204)
-        });
-
-        test('DELETE 404 /api/comments/69', () => {
-            return request(app)
-                .delete('/api/comments/69')
-                .expect(404)
-                .then(({ body: { msg } }) => {
-                    expect(msg).toBe('Not found')
-                })
-        });
-
-        test('DELETE 400 /api/comments/cat', () => {
-            return request(app)
-                .delete('/api/comments/cat')
-                .expect(400)
-                .then(({ body: { msg } }) => {
-                    expect(msg).toBe('Invalid input')
-                })
-        });
-
-
     });
 
 

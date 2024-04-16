@@ -1,6 +1,4 @@
-const express = require("express");
-const app = express();
-const index = require('../db/data/test-data/index')
+
 const { deleteCommentById, checkCommentExists } = require('../models/comments.model')
 
 exports.removeCommentById = (req, res, next) => {

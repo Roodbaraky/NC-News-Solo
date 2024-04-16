@@ -10,10 +10,12 @@ exports.handlePsqlErrors = (err, req, res, next) => {
     //Is it a problem if I leave these here? Quicker to comment/uncomment for debugging as I progress...
     // console.log(err.code)
     // console.log(err)
-    if (err.code === '22P02') {
+    const fourHundreds = ['22P02', '23502']
+    const fourOhFours = ['23503']
+    if (fourHundreds.includes(err.code)) {
         res.status(400).send({ msg: 'Invalid input' });
     }
-    if (err.code === '23503') {
+    if (fourOhFours.includes(err.code)) {
         res.status(404).send({ msg: 'Not found' });
     }
     else next(err);
