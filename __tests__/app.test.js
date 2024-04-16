@@ -117,39 +117,88 @@ describe('/api/articles/:article_id', () => {
 });
 
 describe('/api/articles/:article_id/comments', () => {
-    test('GET 200 /api/articles/1/comments', () => {
-        return request(app)
-            .get('/api/articles/1/comments')
-            .expect(200)
-            .then(({ body: { comments } }) => {
-                expect(comments.length).toBe(11)
-                comments.forEach((comment) => {
+    describe('GET /api/articles/:article_id/comments', () => {
+        test('GET 200 /api/articles/1/comments', () => {
+            return request(app)
+                .get('/api/articles/1/comments')
+                .expect(200)
+                .then(({ body: { comments } }) => {
+                    expect(comments.length).toBe(11)
+                    comments.forEach((comment) => {
+                        expect(typeof comment.comment_id).toBe('number')
+                        expect(typeof comment.votes).toBe('number')
+                        expect(typeof comment.created_at).toBe('string')
+                        expect(typeof comment.author).toBe('string')
+                        expect(typeof comment.body).toBe('string')
+                        expect(typeof comment.comment_id).toBe('number')
+                    })
+                    expect(comments).toBeSorted({ key: 'created_at', descending: true })
+                })
+        });
+
+        test('GET 404 /api/articles/69/comments', () => {
+            return request(app)
+                .get('/api/articles/69/comments')
+                .expect(404)
+                .then(({ body: { msg } }) => {
+                    expect(msg).toBe('Not found')
+                })
+        })
+
+        test('GET 400 /api/articles/cat/comments', () => {
+            return request(app)
+                .get('/api/articles/cat/comments')
+                .expect(400)
+                .then(({ body: { msg } }) => {
+                    expect(msg).toBe('Invalid input')
+                })
+        })
+    })
+    describe('POST /api/articles/:article_id/comments', () => {
+        test('POST 201 /api/articles/1/comments', () => {
+            return request(app)
+                .post('/api/articles/1/comments')
+                .send({
+                    username: 'butter_bridge',
+                    body: 'I like this article'
+                })
+                .expect(201)
+                .then(({ body: { comment } }) => {
+                    expect(typeof comment).toBe('object')
                     expect(typeof comment.comment_id).toBe('number')
+                    expect(typeof comment.body).toBe('string')
+                    expect(typeof comment.article_id).toBe('number')
+                    expect(typeof comment.author).toBe('string')
                     expect(typeof comment.votes).toBe('number')
                     expect(typeof comment.created_at).toBe('string')
-                    expect(typeof comment.author).toBe('string')
-                    expect(typeof comment.body).toBe('string')
-                    expect(typeof comment.comment_id).toBe('number')
                 })
-                expect(comments).toBeSorted({ key: 'created_at', descending: true })
-            })
-    });
+        })
 
-    test('GET 404 /api/articles/69/comments', () => {
-        return request(app)
-            .get('/api/articles/69/comments')
-            .expect(404)
-            .then(({ body: { msg } }) => {
-                expect(msg).toBe('Not found')
-            })
-    })
-    test('GET 400 /api/articles/cat/comments', () => {
-        return request(app)
-            .get('/api/articles/cat/comments')
-            .expect(400)
-            .then(({ body: { msg } }) => {
-                expect(msg).toBe('Invalid input')
-            })
-    })
+        test('POST 400 /api/articles/cat/comments', () => {
+            return request(app)
+                .post('/api/articles/cat/comments')
+                .send({
+                    username: 'butter_bridge',
+                    body: 'I like this article'
+                })
+                .expect(400)
+                .then(({ body: { msg } }) => {
+                    expect(msg).toBe('Invalid input')
+                })
+        })
 
-});
+        test('POST 404 /api/articles/69/comments', () => {
+            return request(app)
+                .post('/api/articles/69/comments')
+                .send({
+                    username: 'butter_bridge',
+                    body: 'I like this article'
+                })
+                .expect(404)
+                .then(({ body: { msg } }) => {
+                    expect(msg).toBe('Not found')
+                })
+        })
+    })
+})
+
