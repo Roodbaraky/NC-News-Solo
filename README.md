@@ -25,3 +25,6 @@ POST /api/articles/:article_id/comments:
 
 PATCH /api/articles/:article_id:
 - updates the properties of an article corresponding to the article_id. Properties are updated according to the object sent in the request body (currenlty in the form { inc_votes: newVote }, where newVote can be a postive or negative integer)
+
+DELETE /api/comments/:comment_id
+- deletes the comment corresponding to the comment_id supplied.
