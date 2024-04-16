@@ -56,27 +56,67 @@ describe('/api', () => {
 });
 
 describe('/api/articles', () => {
-    test('GET 200 /api/articles', () => {
-        return request(app)
-            .get('/api/articles')
-            .expect(200)
-            .then(({ body: { articles } }) => {
+    describe('GET 200 /api/articles', () => {
+        test('GET 200 /api/articles', () => {
+            return request(app)
+                .get('/api/articles')
+                .expect(200)
+                .then(({ body: { articles } }) => {
 
-                articles.forEach((article) => {
-                    expect(typeof article.article_id).toBe("number")
-                    expect(typeof article.title).toBe("string")
-                    expect(typeof article.topic).toBe("string")
-                    expect(typeof article.author).toBe("string")
-                    expect(typeof article.created_at).toBe("string")
-                    expect(typeof article.votes).toBe('number')
-                    expect(typeof article.article_img_url).toBe("string")
-                    expect(typeof article.comment_count).toBe('number')
-                    expect(typeof article.body).toBe('undefined')
+                    articles.forEach((article) => {
+                        expect(typeof article.article_id).toBe("number")
+                        expect(typeof article.title).toBe("string")
+                        expect(typeof article.topic).toBe("string")
+                        expect(typeof article.author).toBe("string")
+                        expect(typeof article.created_at).toBe("string")
+                        expect(typeof article.votes).toBe('number')
+                        expect(typeof article.article_img_url).toBe("string")
+                        expect(typeof article.comment_count).toBe('number')
+                        expect(typeof article.body).toBe('undefined')
+                    })
+                    expect(articles).toBeSorted({ key: "created_at", descending: true })
                 })
-                expect(articles).toBeSorted({ key: "created_at", descending: true })
-            })
+        });
+
+        test('GET 200 /api/articles?topic=mitch - happy path', () => {
+            return request(app)
+                .get('/api/articles?topic=mitch')
+                .expect(200)
+                .then(({ body: { articles } }) => {
+                    articles.forEach((article) => {
+                        expect(typeof article.article_id).toBe("number")
+                        expect(typeof article.title).toBe("string")
+                        expect(article.topic).toBe("mitch")
+                        expect(typeof article.author).toBe("string")
+                        expect(typeof article.created_at).toBe("string")
+                        expect(typeof article.votes).toBe('number')
+                        expect(typeof article.article_img_url).toBe("string")
+                        expect(typeof article.comment_count).toBe('number')
+                        expect(typeof article.body).toBe('undefined')
+                    })
+                    expect(articles).toBeSorted({ key: "created_at", descending: true })
+                })
+        });
+
+        test('GET 400 /api/articles?tpic=mitch - bad query', () => {
+            return request(app)
+                .get('/api/articles?tpic=mitch')
+                .expect(400)
+                .then(({ body: { msg } }) => {
+                    expect(msg).toBe('Invalid input')
+                })
+        });
+
+        test('GET 404 /api/articles?topic=hippopotamussy- topic does not exist', () => {
+            return request(app)
+                .get('/api/articles?topic=hippopotamussy')
+                .expect(404)
+                .then(({ body: { msg } }) => {
+                    expect(msg).toBe('Not found')
+                })
+        });
     });
-});
+})
 
 describe('/api/articles/:article_id', () => {
     describe('GET /api/articles/:article_id', () => {

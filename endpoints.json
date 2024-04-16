@@ -15,7 +15,7 @@
     }
   },
   "GET /api/articles": {
-    "description": "serves an array of all articles",
+    "description": "serves an array of all articles (which satisfy the optional query)",
     "queries": [
       "author",
       "topic",

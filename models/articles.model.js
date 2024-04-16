@@ -1,6 +1,23 @@
 const db = require('../db/connection')
-exports.fetchArticles = () => {
-    return db.query(`SELECT articles.article_id, articles.title, articles.topic, articles.author, articles.created_at, articles.votes, article_img_url, COUNT(comments.article_id)::INTEGER AS comment_count FROM articles LEFT JOIN comments ON comments.article_id=articles.article_id GROUP BY articles.article_id ORDER BY articles.created_at DESC;`)
+exports.fetchArticles = (query) => {
+    const queries = [
+        "author",
+        "topic",
+        "sort_by",
+        "order"
+    ]
+    let queryString = ``
+    const SQLString = `SELECT articles.article_id, articles.title, articles.topic, articles.author, articles.created_at, articles.votes, article_img_url, COUNT(comments.article_id)::INTEGER AS comment_count FROM articles LEFT JOIN comments ON comments.article_id=articles.article_id`
+
+    if (Object.keys(query).length !== 0) {
+        const [[key, value]] = Object.entries(query)
+        queryString = ` WHERE ${key} = '${value}'`
+    }
+
+    const groupByString = ` GROUP BY articles.article_id ORDER BY articles.created_at DESC;`
+
+
+    return db.query(SQLString + queryString + groupByString)
         .then(({ rows }) => {
 
             if (!rows.length) {
@@ -54,7 +71,7 @@ exports.postArticleCommentsById = (article_id, comment) => {
 exports.updateArticleById = (article_id, update) => {
     const { inc_votes } = update
     return db.query(`UPDATE articles SET votes = votes + $2 WHERE article_id = $1 RETURNING *;`, [article_id, inc_votes])
-        .then(( {rows} ) => {
+        .then(({ rows }) => {
             return rows
         })
 }
