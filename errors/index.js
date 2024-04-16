@@ -1,16 +1,12 @@
 
 
 exports.handleCustomErrors = (err, req, res, next) => {
-    // console.log(err.status)
     if (err.status && err.msg) {
         res.status(err.status).send({ msg: err.msg });
     } else next(err);
 };
 
 exports.handlePsqlErrors = (err, req, res, next) => {
-    //Is it a problem if I leave these here? Quicker to comment/uncomment for debugging as I progress...
-    // console.log(err.code)
-    // console.log(err)
     const fourHundreds = ['22P02', '23502', '42703']
     const fourOhFours = ['23503']
     if (fourHundreds.includes(err.code)) {
