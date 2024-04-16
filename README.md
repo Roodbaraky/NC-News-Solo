@@ -17,5 +17,8 @@ GET /api/articles
 GET /api/articles/:article_id:
 - returns an article object corresponding to the article_id passed as a parameter
 
-GET /api/articles/:article_id:
+GET /api/articles/:article_id/comments:
 - returns an array containing comment objects corresponding to the article_id passed as a parameter
+
+POST /api/articles/:article_id/comments:
+- adds a comment object with username and body to the comments table returning the object with a serialised comment_id and constituent properties

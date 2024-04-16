@@ -5,6 +5,7 @@ const db = require("../db/connection");
 const seed = require("../db/seeds/seed");
 const index = require('../db/data/test-data/index')
 const endpointsData = require('../endpoints.json')
+const { checkArticleExists } = require('../models/articles.model')
 
 
 beforeEach(() => {
@@ -202,3 +203,31 @@ describe('/api/articles/:article_id/comments', () => {
     })
 })
 
+describe('checkArticleExists', () => {
+    test('should return a 404 if article_id is not present in table', () => {
+        checkArticleExists(69)
+            .catch((err) => {
+                expect(typeof err).toBe('object')
+                expect(err.msg).toBe('Not found')
+                expect(err.status).toBe(404)
+            })
+    })
+
+    test('should return undefined if article_id is present in table', () => {
+        checkArticleExists(1)
+            .then((result) => {
+                expect(result).toBe(undefined)
+            })
+    });
+
+    test('should return a 400 if article_id is not valid', () => {
+        checkArticleExists('cat')
+            .catch((err) => {
+                expect(typeof err).toBe('object')
+                expect(err.msg).toBe('Invalid input')
+                expect(err.status).toBe(400)
+            })
+    });
+
+
+});

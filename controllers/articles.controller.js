@@ -1,7 +1,7 @@
 const express = require("express");
 const app = express();
 const index = require('../db/data/test-data/index')
-const { fetchArticles, fetchArticlesById, fetchArticleCommentsById, postArticleCommentsById } = require('../models/articles.model')
+const { fetchArticles, fetchArticlesById, fetchArticleCommentsById, postArticleCommentsById, checkArticleExists } = require('../models/articles.model')
 
 
 exports.getArticlesById = (req, res, next) => {
@@ -23,8 +23,8 @@ exports.getArticles = (req, res, next) => {
 
 exports.getArticleCommentsById = (req, res, next) => {
     const { article_id } = req.params
-    fetchArticleCommentsById(article_id)
-        .then((comments) => {
+    Promise.all([fetchArticleCommentsById(article_id), checkArticleExists(article_id)])
+        .then(([comments]) => {
             res.status(200).send({ comments });
         })
         .catch(next)
