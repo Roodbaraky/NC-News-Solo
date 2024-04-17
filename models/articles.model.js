@@ -7,7 +7,8 @@ exports.fetchArticles = (query) => {
         "sort_by",
         "order"
     ]
-    const columns = ['article_id',
+    const columns = [
+        'article_id',
         'title',
         'topic',
         'author',
@@ -17,7 +18,20 @@ exports.fetchArticles = (query) => {
         'comment_count'
     ]
     let queryString = ``
-    const SQLString = `SELECT articles.article_id, articles.title, articles.topic, articles.author, articles.created_at, articles.votes, article_img_url, COUNT(comments.article_id)::INTEGER AS comment_count FROM articles LEFT JOIN comments ON comments.article_id=articles.article_id`
+    const SQLString = `
+    SELECT
+    articles.article_id,
+    articles.title,
+    articles.topic,
+    articles.author,
+    articles.created_at,
+    articles.votes,
+    article_img_url,
+    COUNT(comments.article_id)::INTEGER AS comment_count
+    FROM articles
+    LEFT JOIN comments
+    ON comments.article_id=articles.article_id`
+
     const groupByString = ` GROUP BY articles.article_id`
     let orderByString = ` ORDER BY articles.created_at DESC`
     const orderValues = ['asc', 'ASC', 'desc', 'DESC']
@@ -29,14 +43,11 @@ exports.fetchArticles = (query) => {
             return Promise.reject({ status: 400, msg: "Invalid input" })
         }
 
-        queryString = ` WHERE ${key} = '${value}'`
-
         if (key === 'sort_by') {
             if (!columns.includes(value)) {
                 return Promise.reject({ status: 404, msg: "Not found" })
             }
             orderByString = ` ORDER BY articles.${value} DESC`
-            queryString = ``
             if (value === 'comment_count') {
                 orderByString = ` ORDER BY ${value} DESC`
             }
@@ -50,7 +61,10 @@ exports.fetchArticles = (query) => {
                 orderByString = ` ORDER BY articles.created_at ASC`
 
             }
-            queryString = ``
+
+        }
+        if (key === 'topic') {
+            queryString = ` WHERE ${key} = '${value}'`
         }
     }
 
@@ -65,10 +79,22 @@ exports.fetchArticles = (query) => {
 }
 
 exports.fetchArticlesById = (article_id) => {
-    const SQLString = `SELECT articles.article_id, articles.body, articles.title, articles.topic, articles.author, articles.created_at, articles.votes, article_img_url, COUNT(comments.article_id)::INTEGER AS comment_count FROM articles LEFT JOIN comments ON comments.article_id=articles.article_id`
+    const SQLString = `
+    SELECT
+    articles.article_id,
+    articles.body,
+    articles.title,
+    articles.topic,
+    articles.author,
+    articles.created_at,
+    articles.votes,
+    article_img_url,
+    COUNT(comments.article_id)::INTEGER AS comment_count
+    FROM articles
+    LEFT JOIN comments
+    ON comments.article_id=articles.article_id`
 
     const whereString = ` WHERE articles.article_id = $1`
-
     const groupByString = ` GROUP BY articles.article_id ORDER BY articles.created_at DESC;`
     return db.query(SQLString + whereString + groupByString, [article_id])
         .then(({ rows }) => {
