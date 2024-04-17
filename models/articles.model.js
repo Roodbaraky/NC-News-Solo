@@ -31,6 +31,9 @@ exports.fetchArticles = (query) => {
             }
             orderByString = ` ORDER BY articles.${value} DESC`
             queryString = ``
+            if(value === 'comment_count'){
+                orderByString = ` ORDER BY ${value} DESC`
+            }
 
         }
     }

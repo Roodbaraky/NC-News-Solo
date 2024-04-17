@@ -127,6 +127,15 @@ describe('/api/articles', () => {
                     })
             });
 
+            test('GET 200 /api/articles?sort_by=comment_count - testing aggregate column', () => {
+                return request(app)
+                    .get('/api/articles?sort_by=comment_count')
+                    .expect(200)
+                    .then(({ body: { articles } }) => {
+                        expect(articles).toBeSorted({ key: "comment_count", descending: true })
+                    })
+            });
+
             test('GET 404 /api/articles?sort_by= - column to sort_by does not exist', () => {
                 return request(app)
                     .get('/api/articles?sort_by=elephant')
