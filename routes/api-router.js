@@ -5,6 +5,9 @@ const articlesRouter = require('./articles-router')
 const usersRouter = require('./users-router')
 const commentsRouter = require('./comments-router')
 const { handleCustomErrors } = require('../errors/index')
+const { getTopics } = require('../controllers/topics.controller');
+const { getArticles } = require('../controllers/articles.controller');
+const { getUsers } = require('../controllers/users.controller');
 
 
 
@@ -14,10 +17,30 @@ apiRouter
     .all((req, res) => {
         res.status(405).send({ msg: 'Bad method' } )
     })
-apiRouter.use('/topics', topicsRouter)
-apiRouter.use('/articles', articlesRouter)
-apiRouter.use('/users', usersRouter)
-apiRouter.use('/comments', commentsRouter)
+
+apiRouter
+.route('/topics')
+.get(getTopics)
+.all((req, res) => {
+    res.status(405).send({ msg: 'Bad method' } )
+})
+
+apiRouter
+.route('/articles')
+.get(getArticles)
+.all((req, res) => {
+    res.status(405).send({ msg: 'Bad method' } )
+})
+
+apiRouter
+.route('/users')
+.get(getUsers)
+.all((req, res) => {
+    res.status(405).send({ msg: 'Bad method' } )
+})
+
+
+
 
 
 module.exports = apiRouter;

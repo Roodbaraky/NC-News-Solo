@@ -31,10 +31,19 @@ describe('/api/topics', () => {
                 })
             })
     });
+    test('GET 405 /api/topics - bad method', () => {
+        return request(app)
+            .patch('/api/topics')
+            .send({})
+            .expect(405)
+            .then(({ body: { msg } }) => {
+                expect(msg).toBe('Bad method')
+            })
+    });
 
 });
 
-describe.only('/api', () => {
+describe('/api', () => {
     test('GET 200 /api', () => {
         return request(app)
             .get('/api')
@@ -62,9 +71,6 @@ describe.only('/api', () => {
                 expect(msg).toBe('Not found')
             })
     });
-
-
-
 });
 
 describe('/api/articles', () => {
