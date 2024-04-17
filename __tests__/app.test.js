@@ -34,7 +34,7 @@ describe('/api/topics', () => {
 
 });
 
-describe('/api', () => {
+describe.only('/api', () => {
     test('GET 200 /api', () => {
         return request(app)
             .get('/api')
@@ -42,6 +42,15 @@ describe('/api', () => {
             .then(({ body }) => {
                 expect(body).toEqual(endpointsData)
                 expect(typeof body).toBe('object')
+            })
+    });
+    test('GET 405 /api - bad method', () => {
+        return request(app)
+            .post('/api')
+            .send({})
+            .expect(405)
+            .then(({ body: { msg } }) => {
+                expect(msg).toBe('Bad method')
             })
     });
 
@@ -53,6 +62,8 @@ describe('/api', () => {
                 expect(msg).toBe('Not found')
             })
     });
+
+
 
 });
 
