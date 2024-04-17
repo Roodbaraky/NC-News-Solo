@@ -145,6 +145,37 @@ describe('/api/articles', () => {
 
                     })
             });
+
+            test('GET 200 /api/articles?order=asc - happy path', () => {
+                return request(app)
+                    .get('/api/articles?order=asc')
+                    .expect(200)
+                    .then(({ body: { articles } }) => {
+                        expect(articles).toBeSorted({ descending: false })
+                    })
+            });
+
+            test('GET 200 /api/articles?order=desc - do nothing, default behaviour', () => {
+                return request(app)
+                    .get('/api/articles?order=desc')
+                    .expect(200)
+                    .then(({ body: { articles } }) => {
+                        expect(articles).toBeSorted({ descending: true })
+                    })
+            });
+
+            test('GET 400 /api/articles?order=bad - invalid order value', () => {
+                return request(app)
+                    .get('/api/articles?order=bad')
+                    .expect(400)
+                    .then(({ body: { msg } }) => {
+                        expect(msg).toBe('Invalid input')
+                    })
+            });
+
+
+
+
         })
 
     });
