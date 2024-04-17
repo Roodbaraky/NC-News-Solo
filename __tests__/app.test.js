@@ -6,6 +6,7 @@ const seed = require("../db/seeds/seed");
 const index = require('../db/data/test-data/index')
 const endpointsData = require('../endpoints.json')
 const { checkArticleExists } = require('../models/articles.model')
+const { checkCommentExists } = require('../models/comments.model')
 
 
 beforeEach(() => {
@@ -259,7 +260,7 @@ describe('/api/articles/:article_id', () => {
     })
 })
 
-describe('/api/articles/:article_id/comments', () => {
+describe('/api/articles/:article_id/s', () => {
     describe('GET /api/articles/:article_id/comments', () => {
         test('GET 200 /api/articles/1/comments', () => {
             return request(app)
@@ -395,6 +396,67 @@ describe('checkArticleExists', () => {
                 expect(err.msg).toBe('Invalid input')
                 expect(err.status).toBe(400)
             })
+    });
+
+
+});
+
+describe('checkCommentExists', () => {
+    test('should return a 404 if comment_id is not present in table', () => {
+        checkCommentExists(69)
+            .catch((err) => {
+                expect(typeof err).toBe('object')
+                expect(err.msg).toBe('Not found')
+                expect(err.status).toBe(404)
+            })
+    })
+
+    test('should return undefined if comment_id is present in table', () => {
+        checkCommentExists(1)
+            .then((result) => {
+                expect(result).toBe(undefined)
+            })
+    });
+
+    test('should return a 400 if comment_id is not valid', () => {
+        checkCommentExists('cat')
+            .catch((err) => {
+                expect(typeof err).toBe('object')
+                expect(err.msg).toBe('Invalid input')
+                expect(err.status).toBe(400)
+            })
+    });
+
+
+});
+
+describe('/api/comments/:comment_id', () => {
+    describe('DELETE /api/comments/:comment_id', () => {
+        test('DELETE 204 /api/comments/1', () => {
+            return request(app)
+                .delete('/api/comments/1')
+                .expect(204)
+        });
+
+        test('DELETE 404 /api/comments/69', () => {
+            return request(app)
+                .delete('/api/comments/69')
+                .expect(404)
+                .then(({ body: { msg } }) => {
+                    expect(msg).toBe('Not found')
+                })
+        });
+
+        test('DELETE 400 /api/comments/cat', () => {
+            return request(app)
+                .delete('/api/comments/cat')
+                .expect(400)
+                .then(({ body: { msg } }) => {
+                    expect(msg).toBe('Invalid input')
+                })
+        });
+
+
     });
 
 
