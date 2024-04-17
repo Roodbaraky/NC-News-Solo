@@ -1,6 +1,5 @@
 const db = require('../db/connection')
 exports.fetchArticles = (query) => {
-    const positionalParams = []
     const queries = [
         "author",
         "topic",
@@ -68,7 +67,7 @@ exports.fetchArticles = (query) => {
         }
     }
 
-    return db.query(SQLString + queryString + groupByString + orderByString, positionalParams)
+    return db.query(SQLString + queryString + groupByString + orderByString)
         .then(({ rows }) => {
 
             if (!rows.length) {
