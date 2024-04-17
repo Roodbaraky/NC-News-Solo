@@ -7,7 +7,9 @@ exports.handleCustomErrors = (err, req, res, next) => {
 };
 
 exports.handlePsqlErrors = (err, req, res, next) => {
-    const fourHundreds = ['22P02', '23502', '42703']
+    // console.log(err)
+    // console.log(err.code)
+    const fourHundreds = ['22P02', '23502']
     const fourOhFours = ['23503']
     if (fourHundreds.includes(err.code)) {
         res.status(400).send({ msg: 'Invalid input' });

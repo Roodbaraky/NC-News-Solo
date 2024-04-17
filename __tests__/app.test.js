@@ -78,44 +78,66 @@ describe('/api/articles', () => {
                     expect(articles).toBeSorted({ key: "created_at", descending: true })
                 })
         });
-
-        test('GET 200 /api/articles?topic=mitch - happy path', () => {
-            return request(app)
-                .get('/api/articles?topic=mitch')
-                .expect(200)
-                .then(({ body: { articles } }) => {
-                    articles.forEach((article) => {
-                        expect(typeof article.article_id).toBe("number")
-                        expect(typeof article.title).toBe("string")
-                        expect(article.topic).toBe("mitch")
-                        expect(typeof article.author).toBe("string")
-                        expect(typeof article.created_at).toBe("string")
-                        expect(typeof article.votes).toBe('number')
-                        expect(typeof article.article_img_url).toBe("string")
-                        expect(typeof article.comment_count).toBe('number')
-                        expect(typeof article.body).toBe('undefined')
+        describe('GET 200 /api/articles?topic - FEATURE REQUEST', () => {
+            test('GET 200 /api/articles?topic=mitch - happy path', () => {
+                return request(app)
+                    .get('/api/articles?topic=mitch')
+                    .expect(200)
+                    .then(({ body: { articles } }) => {
+                        articles.forEach((article) => {
+                            expect(typeof article.article_id).toBe("number")
+                            expect(typeof article.title).toBe("string")
+                            expect(article.topic).toBe("mitch")
+                            expect(typeof article.author).toBe("string")
+                            expect(typeof article.created_at).toBe("string")
+                            expect(typeof article.votes).toBe('number')
+                            expect(typeof article.article_img_url).toBe("string")
+                            expect(typeof article.comment_count).toBe('number')
+                            expect(typeof article.body).toBe('undefined')
+                        })
+                        expect(articles).toBeSorted({ key: "created_at", descending: true })
                     })
-                    expect(articles).toBeSorted({ key: "created_at", descending: true })
-                })
-        });
+            });
 
-        test('GET 400 /api/articles?tpic=mitch - bad query', () => {
-            return request(app)
-                .get('/api/articles?tpic=mitch')
-                .expect(400)
-                .then(({ body: { msg } }) => {
-                    expect(msg).toBe('Invalid input')
-                })
-        });
+            test('GET 400 /api/articles?tpic=mitch - bad query', () => {
+                return request(app)
+                    .get('/api/articles?tpic=mitch')
+                    .expect(400)
+                    .then(({ body: { msg } }) => {
+                        expect(msg).toBe('Invalid input')
+                    })
+            });
 
-        test('GET 404 /api/articles?topic=hippopotamussy- topic does not exist', () => {
-            return request(app)
-                .get('/api/articles?topic=hippopotamussy')
-                .expect(404)
-                .then(({ body: { msg } }) => {
-                    expect(msg).toBe('Not found')
-                })
-        });
+            test('GET 404 /api/articles?topic=squidward- topic does not exist', () => {
+                return request(app)
+                    .get('/api/articles?topic=squidward')
+                    .expect(404)
+                    .then(({ body: { msg } }) => {
+                        expect(msg).toBe('Not found')
+                    })
+            });
+        })
+        describe('GET 200 /api/articles?sort_by/order - FEATURE REQUEST', () => {
+            test('GET 200 /api/articles?sort_by=votes - happy path', () => {
+                return request(app)
+                    .get('/api/articles?sort_by=votes')
+                    .expect(200)
+                    .then(({ body: { articles } }) => {
+                        expect(articles).toBeSorted({ key: "votes", descending: true })
+                    })
+            });
+
+            test('GET 404 /api/articles?sort_by= - column to sort_by does not exist', () => {
+                return request(app)
+                    .get('/api/articles?sort_by=elephant')
+                    .expect(404)
+                    .then(({ body: { msg } }) => {
+                        expect(msg).toBe('Not found')
+
+                    })
+            });
+        })
+
     });
 })
 
@@ -134,7 +156,6 @@ describe('/api/articles/:article_id', () => {
                     expect(body.created_at).toBe("2020-07-09T20:11:00.000Z")
                     expect(body.votes).toBe(100)
                     expect(body.article_img_url).toBe("https://images.pexels.com/photos/158651/news-newsletter-newspaper-information-158651.jpeg?w=700&h=700")
-                    // expect(body.comment_count).toBe(11)
                 })
 
         });
@@ -279,7 +300,7 @@ describe('/api/articles/:article_id', () => {
     })
 })
 
-describe('/api/articles/:article_id/s', () => {
+describe('/api/articles/:article_id/comments', () => {
     describe('GET /api/articles/:article_id/comments', () => {
         test('GET 200 /api/articles/1/comments', () => {
             return request(app)

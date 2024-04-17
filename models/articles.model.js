@@ -1,5 +1,6 @@
 const db = require('../db/connection')
 exports.fetchArticles = (query) => {
+    const positionalParams = []
     const queries = [
         "author",
         "topic",
@@ -8,16 +9,50 @@ exports.fetchArticles = (query) => {
     ]
     let queryString = ``
     const SQLString = `SELECT articles.article_id, articles.title, articles.topic, articles.author, articles.created_at, articles.votes, article_img_url, COUNT(comments.article_id)::INTEGER AS comment_count FROM articles LEFT JOIN comments ON comments.article_id=articles.article_id`
+    const groupByString = ` GROUP BY articles.article_id`
+    let orderByString = ` ORDER BY articles.created_at DESC`
+
 
     if (Object.keys(query).length !== 0) {
         const [[key, value]] = Object.entries(query)
+
+        if (!queries.includes(key)) {
+            return Promise.reject({ status: 400, msg: "Invalid input" })
+        }
+
+
         queryString = ` WHERE ${key} = '${value}'`
+
+
+        if (key === 'sort_by') {
+            return exports.checkColumnExists(value)
+                .then((result) => {
+                    if (result) {
+                        orderByString = ` ORDER BY articles.${value} DESC`
+                        queryString = ``
+                        return db.query(SQLString + queryString + groupByString + orderByString, positionalParams)
+                            .then(({ rows }) => {
+
+                                if (!rows.length) {
+                                    return Promise.reject({ status: 404, msg: "Not found" })
+                                }
+                                return rows
+                            })
+                    } else {
+                        return Promise.reject({ status: 404, msg: "Not found" })
+                    }
+                })
+
+        }
+
     }
 
-    const groupByString = ` GROUP BY articles.article_id ORDER BY articles.created_at DESC;`
 
 
-    return db.query(SQLString + queryString + groupByString)
+
+
+
+    return db.query(SQLString + queryString + groupByString + orderByString, positionalParams)
         .then(({ rows }) => {
 
             if (!rows.length) {
@@ -38,7 +73,7 @@ exports.fetchArticlesById = (article_id) => {
             if (!rows.length) {
                 return Promise.reject({ status: 404, msg: "Not found" })
             }
-            
+
             return rows[0]
         })
 }
@@ -78,5 +113,15 @@ exports.updateArticleById = (article_id, update) => {
     return db.query(`UPDATE articles SET votes = votes + $2 WHERE article_id = $1 RETURNING *;`, [article_id, inc_votes])
         .then(({ rows }) => {
             return rows
+        })
+}
+
+exports.checkColumnExists = (column) => {
+    return db.query(`SELECT * 
+        FROM INFORMATION_SCHEMA.COLUMNS 
+        WHERE TABLE_NAME = N'articles'`)
+        .then(({ rows }) => {
+            const existing = rows.map((row) => row.column_name)
+            return existing.includes(column)
         })
 }
