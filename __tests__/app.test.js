@@ -31,6 +31,15 @@ describe('/api/topics', () => {
                 })
             })
     });
+    test('GET 405 /api/topics - bad method', () => {
+        return request(app)
+            .patch('/api/topics')
+            .send({})
+            .expect(405)
+            .then(({ body: { msg } }) => {
+                expect(msg).toBe('Bad method')
+            })
+    });
 
 });
 
@@ -44,6 +53,15 @@ describe('/api', () => {
                 expect(typeof body).toBe('object')
             })
     });
+    test('GET 405 /api - bad method', () => {
+        return request(app)
+            .post('/api')
+            .send({})
+            .expect(405)
+            .then(({ body: { msg } }) => {
+                expect(msg).toBe('Bad method')
+            })
+    });
 
     test('GET 404 /api/notARoute', () => {
         return request(app)
@@ -53,7 +71,6 @@ describe('/api', () => {
                 expect(msg).toBe('Not found')
             })
     });
-
 });
 
 describe('/api/articles', () => {
