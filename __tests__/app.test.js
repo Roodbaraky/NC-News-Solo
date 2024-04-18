@@ -3,7 +3,6 @@ const app = require("../app");
 const data = require("../db/data/test-data/");
 const db = require("../db/connection");
 const seed = require("../db/seeds/seed");
-const index = require('../db/data/test-data/index')
 const endpointsData = require('../endpoints.json')
 const { checkArticleExists } = require('../models/articles.model')
 const { checkCommentExists } = require('../models/comments.model')
