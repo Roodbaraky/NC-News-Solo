@@ -1,4 +1,4 @@
-const { getArticles, getArticlesById, editArticleById, addArticleCommentsById, getArticleCommentsById } = require('../controllers/articles.controller');
+const { addArticle, getArticles, getArticlesById, editArticleById, addArticleCommentsById, getArticleCommentsById } = require('../controllers/articles.controller');
 const { methodNotAllowed } = require('../errors');
 
 const articlesRouter = require('express').Router();
@@ -6,6 +6,7 @@ const articlesRouter = require('express').Router();
 articlesRouter
   .route('/')
   .get(getArticles)
+  .post(addArticle)
   .all(methodNotAllowed)
 
 articlesRouter
