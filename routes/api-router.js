@@ -5,7 +5,7 @@ const articlesRouter = require('./articles-router')
 const usersRouter = require('./users-router')
 const commentsRouter = require('./comments-router')
 const { methodNotAllowed } = require('../errors/index')
-const { getTopics } = require('../controllers/topics.controller');
+const { getTopics, addTopics } = require('../controllers/topics.controller');
 
 
 
@@ -17,6 +17,7 @@ apiRouter
 apiRouter
     .route('/topics')
     .get(getTopics)
+    .post(addTopics)
     .all(methodNotAllowed)
 
 
