@@ -5,7 +5,8 @@ const db = require("../db/connection");
 const seed = require("../db/seeds/seed");
 const endpointsData = require('../endpoints.json')
 const { checkArticleExists } = require('../models/articles.model')
-const { checkCommentExists } = require('../models/comments.model')
+const { checkCommentExists } = require('../models/comments.model');
+const comments = require("../db/data/test-data/comments");
 
 
 beforeEach(() => {
@@ -520,6 +521,66 @@ describe('/api/articles/:article_id/comments', () => {
                 })
         })
     })
+    describe('GET /api/articles/:article_id/comments - FEATURE REQUEST - PAGINATION', () => {
+        test('GET 200 /api/articles/1/comments?limit=10&p=1', () => {
+            return request(app)
+                .get('/api/articles/1/comments?limit=10&p=1')
+                .expect(200)
+                .then(({ body: { comments } }) => {
+                    expect(comments.length <= 10).toBe(true)
+
+                })
+        })
+        test('GET 200 /api/articles/1/comments?limit=5&p=3 - works with varied limit and page values', () => {
+            return request(app)
+                .get('/api/articles/1/comments?limit=5&p=3')
+                .expect(200)
+                .then(({ body: { comments } }) => {
+                    expect(comments.length === 1).toBe(true)
+                })
+        })
+        test('GET 200 /api/articles/1/comments?limit=5 - works with absent page value', () => {
+            return request(app)
+                .get('/api/articles/1/comments?limit=5')
+                .expect(200)
+                .then(({ body: { comments } }) => {
+                    expect(comments.length === 5).toBe(true)
+                })
+        })
+        test('GET 200 /api/articles/1/comments?p=2 - works with absent limit value (defaults to 10)', () => {
+            return request(app)
+                .get('/api/articles/1/comments?p=2')
+                .expect(200)
+                .then(({ body: { comments } }) => {
+                    expect(comments.length === 1).toBe(true)
+                })
+        })
+        test('GET 400 /api/articles/1/comments?limit=cat - errors if limit is bad value', () => {
+            return request(app)
+                .get('/api/articles/1/comments?limit=cat')
+                .expect(400)
+                .then(({ body: { msg } }) => {
+                    expect(msg).toBe('Invalid input')
+                })
+        })
+        test('GET 400 /api/articles/1/comments?p=cat - errors if p is bad value', () => {
+            return request(app)
+                .get('/api/articles/1/comments?p=cat')
+                .expect(400)
+                .then(({ body: { msg } }) => {
+                    expect(msg).toBe('Invalid input')
+                })
+        })
+        test('GET 400 /api/articles/1/comments?limt=5 - errors if query is bad', () => {
+            return request(app)
+                .get('/api/articles/1/comments?limt=5')
+                .expect(400)
+                .then(({ body: { msg } }) => {
+                    expect(msg).toBe('Invalid input')
+                })
+        })
+    })
+
     describe('POST /api/articles/:article_id/comments', () => {
         test('POST 201 /api/articles/1/comments - happy path', () => {
             return request(app)
