@@ -29,5 +29,8 @@ exports.catchAll = (req, res, next) => {
     err.status = 404
     err.msg = 'Not found'
     next(err)
+}
 
+exports.methodNotAllowed = (req, res, next) => {
+    res.status(405).send({ msg: 'Bad method' })
 }
