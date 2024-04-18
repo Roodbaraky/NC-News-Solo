@@ -34,13 +34,6 @@ exports.fetchArticles = (query) => {
     ON comments.article_id=articles.article_id`
     const SQLString2 = `
         SELECT
-        articles.article_id,
-        articles.title,
-        articles.topic,
-        articles.author,
-        articles.created_at,
-        articles.votes,
-        article_img_url,
         COUNT(comments.article_id)::INTEGER AS comment_count
         FROM articles
         LEFT JOIN comments
@@ -107,8 +100,8 @@ exports.fetchArticles = (query) => {
                 return Promise.reject({ status: 404, msg: "Not found" })
             }
             return totalCount === rows.length
-            ?rows
-            :{rows, totalCount}
+                ? rows
+                : { rows, totalCount }
         })
 }
 
@@ -157,13 +150,43 @@ exports.checkArticleExists = (article_id) => {
 }
 
 
-exports.fetchArticleCommentsById = (article_id) => {
-    return db.query(`
-    SELECT *
-    FROM comments
-    WHERE article_id = $1
-    ORDER BY created_at DESC;
-    `, [article_id])
+exports.fetchArticleCommentsById = (article_id, query) => {
+    const queries = [
+        "author",
+        "topic",
+        "sort_by",
+        "order",
+        "limit",
+        "p"
+    ]
+    const queryKeys = Object.keys(query)
+    const { p, limit } = query
+    let useLimit = limit || 10
+    if (queryKeys.length !== 0) {
+
+        if (!queryKeys.every((key) => queries.includes(key))) {
+            return Promise.reject({ status: 400, msg: "Invalid input" })
+        }
+    }
+    const SQLString = `
+            SELECT *
+            FROM comments
+            WHERE article_id = $1
+            ORDER BY created_at DESC
+            `
+    let limitString = ``
+    if (limit) {
+        if (isNaN(+limit)) { return Promise.reject({ status: 400, msg: "Invalid input" }) }
+        const pages = +limit * (+p - 1)
+        limitString = ` LIMIT ${useLimit || 'ALL'} OFFSET ${pages || 0}`
+    }
+    else if (p) {
+        if (isNaN(+p)) { return Promise.reject({ status: 400, msg: "Invalid input" }) }
+
+        const pages = 10 * (+p - 1)
+        limitString = ` LIMIT ${useLimit || 'ALL'} OFFSET ${pages || 0}`
+    }
+    return db.query(`${SQLString}${limitString}`, [article_id])
         .then(({ rows }) => {
             return rows
         })
