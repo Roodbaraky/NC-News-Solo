@@ -195,55 +195,59 @@ describe('/api/articles', () => {
         describe('GET /api/articles?limit=?p= - FEATURE REQUEST - PAGINATION', () => {
             test('GET 200 /api/articles?limit=10&p=1 - return 1st page only', () => {
                 return request(app)
-                .get('/api/articles?limit=10&p=1')
-                .expect(200)
-                .then(({body})=>{
-                    const {articles} = body
-                    expect(articles.length<=10).toBe(true)
-                })
+                    .get('/api/articles?limit=10&p=1')
+                    .expect(200)
+                    .then(({ body: { articles: { rows, totalCount } } }) => {
+                        const articles = rows
+                        expect(articles.length <= 10).toBe(true)
+                        expect(totalCount).toBe(13)
+                    })
             })
             test('GET 200 /api/articles?limit=10&p=2 - return 2nd page only', () => {
                 return request(app)
-                .get('/api/articles?limit=10&p=2')
-                .expect(200)
-                .then(({body})=>{
-                    const {articles} = body
-                    expect(articles.length===3).toBe(true)
-                })
+                    .get('/api/articles?limit=10&p=2')
+                    .expect(200)
+                    .then(({ body: { articles: { rows, totalCount } } }) => {
+                        const articles = rows
+                        expect(articles.length === 3).toBe(true)
+                        expect(totalCount).toBe(13)
+                    })
             })
             test('GET 200 /api/articles?limit=10 - if just limit passed, return 1st page', () => {
                 return request(app)
-                .get('/api/articles?limit=10')
-                .expect(200)
-                .then(({body})=>{
-                    const {articles} = body
-                    expect(articles.length===10).toBe(true)
-                })
+                    .get('/api/articles?limit=10')
+                    .expect(200)
+                    .then(({ body: { articles: { rows, totalCount } } }) => {
+                        const articles = rows
+                        expect(articles.length === 10).toBe(true)
+                        expect(totalCount).toBe(13)
+                    })
             })
             test('GET 200 /api/articles?p=2 - if just p passed, return p page, assuming limit=10', () => {
                 return request(app)
-                .get('/api/articles?p=2')
-                .expect(200)
-                .then(({body})=>{
-                    const {articles} = body
-                    expect(articles.length===3).toBe(true)
-                })
+                    .get('/api/articles?p=2')
+                    .expect(200)
+                    .then(({ body: { articles: { rows, totalCount } } }) => {
+                        const articles = rows
+                        expect(articles.length === 3).toBe(true)
+                        expect(totalCount).toBe(13)
+                    })
             })
             test('GET 400 /api/articles?limit=cat - if limit is not num, bad req', () => {
                 return request(app)
-                .get('/api/articles?limit=cat')
-                .expect(400)
-                .then(({body:{msg}})=>{
-                    expect(msg).toBe('Invalid input')
-                })
+                    .get('/api/articles?limit=cat')
+                    .expect(400)
+                    .then(({ body: { msg } }) => {
+                        expect(msg).toBe('Invalid input')
+                    })
             })
             test('GET 400 /api/articles?p=cat - if p is not num, bad req', () => {
                 return request(app)
-                .get('/api/articles?p=cat')
-                .expect(400)
-                .then(({body:{msg}})=>{
-                    expect(msg).toBe('Invalid input')
-                })
+                    .get('/api/articles?p=cat')
+                    .expect(400)
+                    .then(({ body: { msg } }) => {
+                        expect(msg).toBe('Invalid input')
+                    })
             })
         })
 

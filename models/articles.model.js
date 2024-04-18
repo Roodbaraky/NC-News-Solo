@@ -32,6 +32,20 @@ exports.fetchArticles = (query) => {
     FROM articles
     LEFT JOIN comments
     ON comments.article_id=articles.article_id`
+    const SQLString2 = `
+        SELECT
+        articles.article_id,
+        articles.title,
+        articles.topic,
+        articles.author,
+        articles.created_at,
+        articles.votes,
+        article_img_url,
+        COUNT(comments.article_id)::INTEGER AS comment_count
+        FROM articles
+        LEFT JOIN comments
+        ON comments.article_id=articles.article_id`
+
 
     const groupByString = ` GROUP BY articles.article_id`
     let orderByString = ` ORDER BY articles.created_at DESC`
@@ -71,26 +85,30 @@ exports.fetchArticles = (query) => {
             queryString = ` WHERE topic = '${topic}'`
         }
         if (limit) {
-            if (isNaN(+limit)) return Promise.reject({status:400, msg: "Invalid input"})
-            const pages = +limit * (+p-1)
-            limitString = ` LIMIT ${useLimit || 'ALL'} OFFSET ${pages||0}`
+            if (isNaN(+limit)) return Promise.reject({ status: 400, msg: "Invalid input" })
+            const pages = +limit * (+p - 1)
+            limitString = ` LIMIT ${useLimit || 'ALL'} OFFSET ${pages || 0}`
         }
-        else if(p){
-            if (isNaN(+p)) return Promise.reject({status:400, msg: "Invalid input"})
+        else if (p) {
+            if (isNaN(+p)) return Promise.reject({ status: 400, msg: "Invalid input" })
 
-            const pages = 10 * (+p-1)
-            limitString = ` LIMIT ${useLimit || 'ALL'} OFFSET ${pages||0}`
+            const pages = 10 * (+p - 1)
+            limitString = ` LIMIT ${useLimit || 'ALL'} OFFSET ${pages || 0}`
         }
 
     }
 
-    return db.query(`${SQLString}${queryString}${groupByString}${orderByString}${limitString}`)
-        .then(({ rows }) => {
-
+    const mainDbQuery = db.query(`${SQLString}${queryString}${groupByString}${orderByString}${limitString}`)
+    const totalCountQuery = db.query(`${SQLString2}${queryString}${groupByString}${orderByString}`)
+    return Promise.all([mainDbQuery, totalCountQuery])
+        .then(([{ rows }, totalCountReturn]) => {
+            const totalCount = totalCountReturn.rows.length
             if (!rows.length) {
                 return Promise.reject({ status: 404, msg: "Not found" })
             }
-            return rows
+            return totalCount === rows.length
+            ?rows
+            :{rows, totalCount}
         })
 }
 
