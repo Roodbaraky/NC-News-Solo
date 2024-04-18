@@ -4,7 +4,9 @@ exports.fetchArticles = (query) => {
         "author",
         "topic",
         "sort_by",
-        "order"
+        "order",
+        "limit",
+        "p"
     ]
     const columns = [
         'article_id',
@@ -33,41 +35,56 @@ exports.fetchArticles = (query) => {
 
     const groupByString = ` GROUP BY articles.article_id`
     let orderByString = ` ORDER BY articles.created_at DESC`
+    let limitString = ``
     const orderValues = ['asc', 'ASC', 'desc', 'DESC']
+    const queryKeys = Object.keys(query)
 
+    if (queryKeys.length !== 0) {
 
-    if (Object.keys(query).length !== 0) {
-        const [[key, value]] = Object.entries(query)
-        if (!queries.includes(key)) {
+        const { author, topic, sort_by, order, limit, p } = query
+        let useLimit = limit || 10
+        if (!queryKeys.every((key) => queries.includes(key))) {
             return Promise.reject({ status: 400, msg: "Invalid input" })
         }
 
-        if (key === 'sort_by') {
-            if (!columns.includes(value)) {
+        if (sort_by) {
+            if (!columns.includes(sort_by)) {
                 return Promise.reject({ status: 404, msg: "Not found" })
             }
-            orderByString = ` ORDER BY articles.${value} DESC`
-            if (value === 'comment_count') {
-                orderByString = ` ORDER BY ${value} DESC`
+            orderByString = ` ORDER BY articles.${sort_by} DESC`
+            if (sort_by === 'comment_count') {
+                orderByString = ` ORDER BY ${sort_by} DESC`
             }
         }
 
-        if (key === 'order') {
-            if (!orderValues.includes(value)) {
+        if (order) {
+            if (!orderValues.includes(order)) {
                 return Promise.reject({ status: 400, msg: "Invalid input" })
             }
-            if (value === 'ASC' || value === 'asc') {
+            if (order === 'ASC' || order === 'asc') {
                 orderByString = ` ORDER BY articles.created_at ASC`
 
             }
 
         }
-        if (key === 'topic') {
-            queryString = ` WHERE ${key} = '${value}'`
+        if (topic) {
+            queryString = ` WHERE topic = '${topic}'`
         }
+        if (limit) {
+            if (isNaN(+limit)) return Promise.reject({status:400, msg: "Invalid input"})
+            const pages = +limit * (+p-1)
+            limitString = ` LIMIT ${useLimit || 'ALL'} OFFSET ${pages||0}`
+        }
+        else if(p){
+            if (isNaN(+p)) return Promise.reject({status:400, msg: "Invalid input"})
+
+            const pages = 10 * (+p-1)
+            limitString = ` LIMIT ${useLimit || 'ALL'} OFFSET ${pages||0}`
+        }
+
     }
 
-    return db.query(SQLString + queryString + groupByString + orderByString)
+    return db.query(`${SQLString}${queryString}${groupByString}${orderByString}${limitString}`)
         .then(({ rows }) => {
 
             if (!rows.length) {
@@ -109,7 +126,11 @@ exports.checkArticleExists = (article_id) => {
     if (isNaN(+article_id)) {
         return Promise.reject({ status: 400, msg: "Invalid input" })
     }
-    return db.query(`SELECT * FROM articles WHERE article_id = $1`, [article_id])
+    return db.query(`
+    SELECT *
+    FROM articles
+    WHERE article_id = $1
+    `, [article_id])
         .then(({ rows }) => {
             if (!rows.length) {
                 return Promise.reject({ status: 404, msg: "Not found" })
@@ -119,7 +140,12 @@ exports.checkArticleExists = (article_id) => {
 
 
 exports.fetchArticleCommentsById = (article_id) => {
-    return db.query(`SELECT * FROM comments WHERE article_id = $1 ORDER BY created_at DESC;`, [article_id])
+    return db.query(`
+    SELECT *
+    FROM comments
+    WHERE article_id = $1
+    ORDER BY created_at DESC;
+    `, [article_id])
         .then(({ rows }) => {
             return rows
         })
@@ -142,7 +168,12 @@ exports.postArticleCommentsById = (article_id, comment) => {
 
 exports.updateArticleById = (article_id, update) => {
     const { inc_votes } = update
-    return db.query(`UPDATE articles SET votes = votes + $2 WHERE article_id = $1 RETURNING *;`, [article_id, inc_votes])
+    return db.query(`
+    UPDATE articles
+    SET votes = votes + $2
+    WHERE article_id = $1
+    RETURNING *;
+    `, [article_id, inc_votes])
         .then(({ rows }) => {
             return rows
         })
