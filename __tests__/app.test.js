@@ -233,6 +233,16 @@ describe('/api/articles', () => {
                         expect(totalCount).toBe(13)
                     })
             })
+            test('GET 200 /api/articles?p=2&topic=mitch - totalCount changes re:other filters', () => {
+                return request(app)
+                    .get('/api/articles?p=2&topic=mitch')
+                    .expect(200)
+                    .then(({ body: { articles: { rows, totalCount } } }) => {
+                        const articles = rows
+                        expect(articles.length === 2).toBe(true)
+                        expect(totalCount).toBe(12)
+                    })
+            })
             test('GET 400 /api/articles?limit=cat - if limit is not num, bad req', () => {
                 return request(app)
                     .get('/api/articles?limit=cat')
