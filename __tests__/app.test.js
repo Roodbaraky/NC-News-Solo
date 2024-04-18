@@ -80,7 +80,6 @@ describe('/api/articles', () => {
                 .get('/api/articles')
                 .expect(200)
                 .then(({ body: { articles } }) => {
-
                     articles.forEach((article) => {
                         expect(typeof article.article_id).toBe("number")
                         expect(typeof article.title).toBe("string")

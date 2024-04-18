@@ -1,7 +1,11 @@
+const { removeCommentById } = require('../controllers/comments.controller');
+const { methodNotAllowed } = require('../errors');
+
 const apiRouter = require('express').Router();
 
-apiRouter.get('/', (req, res) => {
-  res.status(200).send('All OK from API Router');
-});
+apiRouter
+  .route('/:comment_id')
+  .delete(removeCommentById)
+  .all(methodNotAllowed)
 
 module.exports = apiRouter;
