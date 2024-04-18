@@ -192,6 +192,74 @@ describe('/api/articles', () => {
 
 
         })
+        describe('GET /api/articles?limit=?p= - FEATURE REQUEST - PAGINATION', () => {
+            test('GET 200 /api/articles?limit=10&p=1 - return 1st page only', () => {
+                return request(app)
+                    .get('/api/articles?limit=10&p=1')
+                    .expect(200)
+                    .then(({ body: { articles: { rows, totalCount } } }) => {
+                        const articles = rows
+                        expect(articles.length <= 10).toBe(true)
+                        expect(totalCount).toBe(13)
+                    })
+            })
+            test('GET 200 /api/articles?limit=10&p=2 - return 2nd page only', () => {
+                return request(app)
+                    .get('/api/articles?limit=10&p=2')
+                    .expect(200)
+                    .then(({ body: { articles: { rows, totalCount } } }) => {
+                        const articles = rows
+                        expect(articles.length === 3).toBe(true)
+                        expect(totalCount).toBe(13)
+                    })
+            })
+            test('GET 200 /api/articles?limit=10 - if just limit passed, return 1st page', () => {
+                return request(app)
+                    .get('/api/articles?limit=10')
+                    .expect(200)
+                    .then(({ body: { articles: { rows, totalCount } } }) => {
+                        const articles = rows
+                        expect(articles.length === 10).toBe(true)
+                        expect(totalCount).toBe(13)
+                    })
+            })
+            test('GET 200 /api/articles?p=2 - if just p passed, return p page, assuming limit=10', () => {
+                return request(app)
+                    .get('/api/articles?p=2')
+                    .expect(200)
+                    .then(({ body: { articles: { rows, totalCount } } }) => {
+                        const articles = rows
+                        expect(articles.length === 3).toBe(true)
+                        expect(totalCount).toBe(13)
+                    })
+            })
+            test('GET 200 /api/articles?p=2&topic=mitch - totalCount changes re:other filters', () => {
+                return request(app)
+                    .get('/api/articles?p=2&topic=mitch')
+                    .expect(200)
+                    .then(({ body: { articles: { rows, totalCount } } }) => {
+                        const articles = rows
+                        expect(articles.length === 2).toBe(true)
+                        expect(totalCount).toBe(12)
+                    })
+            })
+            test('GET 400 /api/articles?limit=cat - if limit is not num, bad req', () => {
+                return request(app)
+                    .get('/api/articles?limit=cat')
+                    .expect(400)
+                    .then(({ body: { msg } }) => {
+                        expect(msg).toBe('Invalid input')
+                    })
+            })
+            test('GET 400 /api/articles?p=cat - if p is not num, bad req', () => {
+                return request(app)
+                    .get('/api/articles?p=cat')
+                    .expect(400)
+                    .then(({ body: { msg } }) => {
+                        expect(msg).toBe('Invalid input')
+                    })
+            })
+        })
 
     });
     describe('POST /api/articles', () => {
@@ -255,512 +323,512 @@ describe('/api/articles', () => {
         })
     })
 })
-    describe('/api/articles/:article_id', () => {
-        describe('GET /api/articles/:article_id', () => {
-            test('GET 200 /api/articles/1', () => {
-                return request(app)
-                    .get('/api/articles/1')
-                    .expect(200)
-                    .then(({ body }) => {
-                        expect(body.article_id).toBe(1)
-                        expect(body.title).toBe("Living in the shadow of a great man")
-                        expect(body.topic).toBe("mitch")
-                        expect(body.author).toBe("butter_bridge")
-                        expect(body.body).toBe("I find this existence challenging")
-                        expect(body.created_at).toBe("2020-07-09T20:11:00.000Z")
-                        expect(body.votes).toBe(100)
-                        expect(body.article_img_url).toBe("https://images.pexels.com/photos/158651/news-newsletter-newspaper-information-158651.jpeg?w=700&h=700")
-                    })
+describe('/api/articles/:article_id', () => {
+    describe('GET /api/articles/:article_id', () => {
+        test('GET 200 /api/articles/1', () => {
+            return request(app)
+                .get('/api/articles/1')
+                .expect(200)
+                .then(({ body }) => {
+                    expect(body.article_id).toBe(1)
+                    expect(body.title).toBe("Living in the shadow of a great man")
+                    expect(body.topic).toBe("mitch")
+                    expect(body.author).toBe("butter_bridge")
+                    expect(body.body).toBe("I find this existence challenging")
+                    expect(body.created_at).toBe("2020-07-09T20:11:00.000Z")
+                    expect(body.votes).toBe(100)
+                    expect(body.article_img_url).toBe("https://images.pexels.com/photos/158651/news-newsletter-newspaper-information-158651.jpeg?w=700&h=700")
+                })
 
-            });
+        });
 
-            test('GET 200 /api/articles/1 - feature request, includes comment_count', () => {
-                return request(app)
-                    .get('/api/articles/1')
-                    .expect(200)
-                    .then(({ body }) => {
-                        expect(body.article_id).toBe(1)
-                        expect(body.title).toBe("Living in the shadow of a great man")
-                        expect(body.topic).toBe("mitch")
-                        expect(body.author).toBe("butter_bridge")
-                        expect(body.body).toBe("I find this existence challenging")
-                        expect(body.created_at).toBe("2020-07-09T20:11:00.000Z")
-                        expect(body.votes).toBe(100)
-                        expect(body.article_img_url).toBe("https://images.pexels.com/photos/158651/news-newsletter-newspaper-information-158651.jpeg?w=700&h=700")
-                        expect(body.comment_count).toBe(11)
-                    })
+        test('GET 200 /api/articles/1 - feature request, includes comment_count', () => {
+            return request(app)
+                .get('/api/articles/1')
+                .expect(200)
+                .then(({ body }) => {
+                    expect(body.article_id).toBe(1)
+                    expect(body.title).toBe("Living in the shadow of a great man")
+                    expect(body.topic).toBe("mitch")
+                    expect(body.author).toBe("butter_bridge")
+                    expect(body.body).toBe("I find this existence challenging")
+                    expect(body.created_at).toBe("2020-07-09T20:11:00.000Z")
+                    expect(body.votes).toBe(100)
+                    expect(body.article_img_url).toBe("https://images.pexels.com/photos/158651/news-newsletter-newspaper-information-158651.jpeg?w=700&h=700")
+                    expect(body.comment_count).toBe(11)
+                })
 
-            });
+        });
 
-            test('GET 400 /api/articles/:article_id', () => {
-                return request(app)
-                    .get('/api/articles/cat')
-                    .expect(400)
-                    .then(({ body: { msg } }) => {
-                        expect(msg).toBe('Invalid input')
+        test('GET 400 /api/articles/:article_id', () => {
+            return request(app)
+                .get('/api/articles/cat')
+                .expect(400)
+                .then(({ body: { msg } }) => {
+                    expect(msg).toBe('Invalid input')
 
-                    })
-            });
+                })
+        });
 
-            test('GET 404 /api/articles/:article_id', () => {
-                return request(app)
-                    .get('/api/articles/69')
-                    .expect(404)
-                    .then(({ body: { msg } }) => {
-                        expect(msg).toBe('Not found')
+        test('GET 404 /api/articles/:article_id', () => {
+            return request(app)
+                .get('/api/articles/69')
+                .expect(404)
+                .then(({ body: { msg } }) => {
+                    expect(msg).toBe('Not found')
 
-                    })
-            });
-        })
-
-        describe('PATCH /api/articles/:article_id', () => {
-            test('PATCH 200 /api/articles/1', () => {
-                return request(app)
-                    .patch('/api/articles/1')
-                    .send({ inc_votes: 1 })
-                    .expect(200)
-                    .then(({ body: { article } }) => {
-                        expect(article.article_id).toBe(1)
-                        expect(article.title).toBe("Living in the shadow of a great man")
-                        expect(article.topic).toBe("mitch")
-                        expect(article.author).toBe("butter_bridge")
-                        expect(article.body).toBe("I find this existence challenging")
-                        expect(article.created_at).toBe("2020-07-09T20:11:00.000Z")
-                        expect(article.votes).toBe(101)
-                        expect(article.article_img_url).toBe("https://images.pexels.com/photos/158651/news-newsletter-newspaper-information-158651.jpeg?w=700&h=700")
-
-                    })
-            })
-            test('PATCH 200 /api/articles/1 - happy path', () => {
-                return request(app)
-                    .patch('/api/articles/1')
-                    .send({ inc_votes: -100 })
-                    .expect(200)
-                    .then(({ body: { article } }) => {
-                        expect(article.article_id).toBe(1)
-                        expect(article.title).toBe("Living in the shadow of a great man")
-                        expect(article.topic).toBe("mitch")
-                        expect(article.author).toBe("butter_bridge")
-                        expect(article.body).toBe("I find this existence challenging")
-                        expect(article.created_at).toBe("2020-07-09T20:11:00.000Z")
-                        expect(article.votes).toBe(0)
-                        expect(article.article_img_url).toBe("https://images.pexels.com/photos/158651/news-newsletter-newspaper-information-158651.jpeg?w=700&h=700")
-
-                    })
-            })
-
-            test('PATCH 200 /api/articles/1 - ignores aditional keys in req body', () => {
-                return request(app)
-                    .patch('/api/articles/1')
-                    .send({
-                        inc_votes: -100,
-                        what_is_the_point: 69,
-                        malicious_key: 420
-                    })
-                    .expect(200)
-                    .then(({ body: { article } }) => {
-                        expect(article.article_id).toBe(1)
-                        expect(article.title).toBe("Living in the shadow of a great man")
-                        expect(article.topic).toBe("mitch")
-                        expect(article.author).toBe("butter_bridge")
-                        expect(article.body).toBe("I find this existence challenging")
-                        expect(article.created_at).toBe("2020-07-09T20:11:00.000Z")
-                        expect(article.votes).toBe(0)
-                        expect(article.article_img_url).toBe("https://images.pexels.com/photos/158651/news-newsletter-newspaper-information-158651.jpeg?w=700&h=700")
-
-                    })
-            })
-
-            test('PATCH 400 /api/articles/cat - invalid id', () => {
-                return request(app)
-                    .patch('/api/articles/cat')
-                    .send({ inc_votes: 1 })
-                    .expect(400)
-                    .then(({ body: { msg } }) => {
-                        expect(msg).toBe('Invalid input')
-                    })
-            });
-
-            test('PATCH 400 /api/articles/1 - bad req body, missing key', () => {
-                return request(app)
-                    .patch('/api/articles/1')
-                    .send({})
-                    .expect(400)
-                    .then(({ body: { msg } }) => {
-                        expect(msg).toBe('Invalid input')
-                    })
-            });
-
-            test('PATCH 400 /api/articles/1 - bad req body, value not INT', () => {
-                return request(app)
-                    .patch('/api/articles/1')
-                    .send({ inc_votes: 'cat' })
-                    .expect(400)
-                    .then(({ body: { msg } }) => {
-                        expect(msg).toBe('Invalid input')
-                    })
-            });
-
-
-            test('PATCH 404 /api/articles/69', () => {
-                return request(app)
-                    .patch('/api/articles/69')
-                    .send({ inc_votes: 1 })
-                    .expect(404)
-                    .then(({ body: { msg } }) => {
-                        expect(msg).toBe('Not found')
-                    })
-            });
-        })
+                })
+        });
     })
 
-    describe('/api/articles/:article_id/comments', () => {
-        describe('GET /api/articles/:article_id/comments', () => {
-            test('GET 200 /api/articles/1/comments', () => {
-                return request(app)
-                    .get('/api/articles/1/comments')
-                    .expect(200)
-                    .then(({ body: { comments } }) => {
-                        expect(comments.length).toBe(11)
-                        comments.forEach((comment) => {
-                            expect(comment.article_id).toBe(1)
-                            expect(typeof comment.votes).toBe('number')
-                            expect(typeof comment.created_at).toBe('string')
-                            expect(typeof comment.author).toBe('string')
-                            expect(typeof comment.body).toBe('string')
-                            expect(typeof comment.comment_id).toBe('number')
-                        })
-                        expect(comments).toBeSorted({ key: 'created_at', descending: true })
-                    })
-            });
+    describe('PATCH /api/articles/:article_id', () => {
+        test('PATCH 200 /api/articles/1', () => {
+            return request(app)
+                .patch('/api/articles/1')
+                .send({ inc_votes: 1 })
+                .expect(200)
+                .then(({ body: { article } }) => {
+                    expect(article.article_id).toBe(1)
+                    expect(article.title).toBe("Living in the shadow of a great man")
+                    expect(article.topic).toBe("mitch")
+                    expect(article.author).toBe("butter_bridge")
+                    expect(article.body).toBe("I find this existence challenging")
+                    expect(article.created_at).toBe("2020-07-09T20:11:00.000Z")
+                    expect(article.votes).toBe(101)
+                    expect(article.article_img_url).toBe("https://images.pexels.com/photos/158651/news-newsletter-newspaper-information-158651.jpeg?w=700&h=700")
 
-            test('GET 404 /api/articles/69/comments - id out of range', () => {
-                return request(app)
-                    .get('/api/articles/69/comments')
-                    .expect(404)
-                    .then(({ body: { msg } }) => {
-                        expect(msg).toBe('Not found')
-                    })
-            })
-
-            test('GET 400 /api/articles/cat/comments - id invalid', () => {
-                return request(app)
-                    .get('/api/articles/cat/comments')
-                    .expect(400)
-                    .then(({ body: { msg } }) => {
-                        expect(msg).toBe('Invalid input')
-                    })
-            })
+                })
         })
-        describe('POST /api/articles/:article_id/comments', () => {
-            test('POST 201 /api/articles/1/comments - happy path', () => {
-                return request(app)
-                    .post('/api/articles/1/comments')
-                    .send({
-                        username: 'butter_bridge',
-                        body: 'I like this article',
-                    })
-                    .expect(201)
-                    .then(({ body: { comment } }) => {
-                        expect(typeof comment).toBe('object')
-                        expect(typeof comment.comment_id).toBe('number')
-                        expect(typeof comment.body).toBe('string')
-                        expect(typeof comment.article_id).toBe('number')
-                        expect(typeof comment.author).toBe('string')
+        test('PATCH 200 /api/articles/1 - happy path', () => {
+            return request(app)
+                .patch('/api/articles/1')
+                .send({ inc_votes: -100 })
+                .expect(200)
+                .then(({ body: { article } }) => {
+                    expect(article.article_id).toBe(1)
+                    expect(article.title).toBe("Living in the shadow of a great man")
+                    expect(article.topic).toBe("mitch")
+                    expect(article.author).toBe("butter_bridge")
+                    expect(article.body).toBe("I find this existence challenging")
+                    expect(article.created_at).toBe("2020-07-09T20:11:00.000Z")
+                    expect(article.votes).toBe(0)
+                    expect(article.article_img_url).toBe("https://images.pexels.com/photos/158651/news-newsletter-newspaper-information-158651.jpeg?w=700&h=700")
+
+                })
+        })
+
+        test('PATCH 200 /api/articles/1 - ignores aditional keys in req body', () => {
+            return request(app)
+                .patch('/api/articles/1')
+                .send({
+                    inc_votes: -100,
+                    what_is_the_point: 69,
+                    malicious_key: 420
+                })
+                .expect(200)
+                .then(({ body: { article } }) => {
+                    expect(article.article_id).toBe(1)
+                    expect(article.title).toBe("Living in the shadow of a great man")
+                    expect(article.topic).toBe("mitch")
+                    expect(article.author).toBe("butter_bridge")
+                    expect(article.body).toBe("I find this existence challenging")
+                    expect(article.created_at).toBe("2020-07-09T20:11:00.000Z")
+                    expect(article.votes).toBe(0)
+                    expect(article.article_img_url).toBe("https://images.pexels.com/photos/158651/news-newsletter-newspaper-information-158651.jpeg?w=700&h=700")
+
+                })
+        })
+
+        test('PATCH 400 /api/articles/cat - invalid id', () => {
+            return request(app)
+                .patch('/api/articles/cat')
+                .send({ inc_votes: 1 })
+                .expect(400)
+                .then(({ body: { msg } }) => {
+                    expect(msg).toBe('Invalid input')
+                })
+        });
+
+        test('PATCH 400 /api/articles/1 - bad req body, missing key', () => {
+            return request(app)
+                .patch('/api/articles/1')
+                .send({})
+                .expect(400)
+                .then(({ body: { msg } }) => {
+                    expect(msg).toBe('Invalid input')
+                })
+        });
+
+        test('PATCH 400 /api/articles/1 - bad req body, value not INT', () => {
+            return request(app)
+                .patch('/api/articles/1')
+                .send({ inc_votes: 'cat' })
+                .expect(400)
+                .then(({ body: { msg } }) => {
+                    expect(msg).toBe('Invalid input')
+                })
+        });
+
+
+        test('PATCH 404 /api/articles/69', () => {
+            return request(app)
+                .patch('/api/articles/69')
+                .send({ inc_votes: 1 })
+                .expect(404)
+                .then(({ body: { msg } }) => {
+                    expect(msg).toBe('Not found')
+                })
+        });
+    })
+})
+
+describe('/api/articles/:article_id/comments', () => {
+    describe('GET /api/articles/:article_id/comments', () => {
+        test('GET 200 /api/articles/1/comments', () => {
+            return request(app)
+                .get('/api/articles/1/comments')
+                .expect(200)
+                .then(({ body: { comments } }) => {
+                    expect(comments.length).toBe(11)
+                    comments.forEach((comment) => {
+                        expect(comment.article_id).toBe(1)
                         expect(typeof comment.votes).toBe('number')
                         expect(typeof comment.created_at).toBe('string')
+                        expect(typeof comment.author).toBe('string')
+                        expect(typeof comment.body).toBe('string')
+                        expect(typeof comment.comment_id).toBe('number')
                     })
-            })
+                    expect(comments).toBeSorted({ key: 'created_at', descending: true })
+                })
+        });
 
-            test('POST 400 /api/articles/cat/comments - invalid id', () => {
-                return request(app)
-                    .post('/api/articles/cat/comments')
-                    .send({
-                        username: 'butter_bridge',
-                        body: 'I like this article'
-                    })
-                    .expect(400)
-                    .then(({ body: { msg } }) => {
-                        expect(msg).toBe('Invalid input')
-                    })
-            })
+        test('GET 404 /api/articles/69/comments - id out of range', () => {
+            return request(app)
+                .get('/api/articles/69/comments')
+                .expect(404)
+                .then(({ body: { msg } }) => {
+                    expect(msg).toBe('Not found')
+                })
+        })
 
-            test('POST 400 /api/articles/1/comments - broken req body', () => {
-                return request(app)
-                    .post('/api/articles/1/comments')
-                    .send({
-                        username: 'butter_bridge',
-                        baddy: 'I like this article'
-                    })
-                    .expect(400)
-                    .then(({ body: { msg } }) => {
-                        expect(msg).toBe('Invalid input')
-                    })
-            })
-
-            test('POST 404 /api/articles/69/comments - id out of range', () => {
-                return request(app)
-                    .post('/api/articles/69/comments')
-                    .send({
-                        username: 'butter_bridge',
-                        body: 'I like this article'
-                    })
-                    .expect(404)
-                    .then(({ body: { msg } }) => {
-                        expect(msg).toBe('Not found')
-                    })
-            })
-
-            test('POST 404 /api/articles/1/comments - author not in db (fkey violation)', () => {
-                return request(app)
-                    .post('/api/articles/1/comments')
-                    .send({
-                        username: 'koo',
-                        body: 'I like this article'
-                    })
-                    .expect(404)
-                    .then(({ body: { msg } }) => {
-                        expect(msg).toBe('Not found')
-                    })
-            })
+        test('GET 400 /api/articles/cat/comments - id invalid', () => {
+            return request(app)
+                .get('/api/articles/cat/comments')
+                .expect(400)
+                .then(({ body: { msg } }) => {
+                    expect(msg).toBe('Invalid input')
+                })
         })
     })
-
-    describe('checkArticleExists', () => {
-        test('should return a 404 if article_id is not present in table', () => {
-            checkArticleExists(69)
-                .catch((err) => {
-                    expect(typeof err).toBe('object')
-                    expect(err.msg).toBe('Not found')
-                    expect(err.status).toBe(404)
+    describe('POST /api/articles/:article_id/comments', () => {
+        test('POST 201 /api/articles/1/comments - happy path', () => {
+            return request(app)
+                .post('/api/articles/1/comments')
+                .send({
+                    username: 'butter_bridge',
+                    body: 'I like this article',
+                })
+                .expect(201)
+                .then(({ body: { comment } }) => {
+                    expect(typeof comment).toBe('object')
+                    expect(typeof comment.comment_id).toBe('number')
+                    expect(typeof comment.body).toBe('string')
+                    expect(typeof comment.article_id).toBe('number')
+                    expect(typeof comment.author).toBe('string')
+                    expect(typeof comment.votes).toBe('number')
+                    expect(typeof comment.created_at).toBe('string')
                 })
         })
 
-        test('should return undefined if article_id is present in table', () => {
-            checkArticleExists(1)
-                .then((result) => {
-                    expect(result).toBe(undefined)
+        test('POST 400 /api/articles/cat/comments - invalid id', () => {
+            return request(app)
+                .post('/api/articles/cat/comments')
+                .send({
+                    username: 'butter_bridge',
+                    body: 'I like this article'
                 })
-        });
-
-        test('should return a 400 if article_id is not valid', () => {
-            checkArticleExists('cat')
-                .catch((err) => {
-                    expect(typeof err).toBe('object')
-                    expect(err.msg).toBe('Invalid input')
-                    expect(err.status).toBe(400)
-                })
-        });
-
-
-    });
-
-    describe('checkCommentExists', () => {
-        test('should return a 404 if comment_id is not present in table', () => {
-            checkCommentExists(69)
-                .catch((err) => {
-                    expect(typeof err).toBe('object')
-                    expect(err.msg).toBe('Not found')
-                    expect(err.status).toBe(404)
+                .expect(400)
+                .then(({ body: { msg } }) => {
+                    expect(msg).toBe('Invalid input')
                 })
         })
 
-        test('should return undefined if comment_id is present in table', () => {
-            checkCommentExists(1)
-                .then((result) => {
-                    expect(result).toBe(undefined)
+        test('POST 400 /api/articles/1/comments - broken req body', () => {
+            return request(app)
+                .post('/api/articles/1/comments')
+                .send({
+                    username: 'butter_bridge',
+                    baddy: 'I like this article'
                 })
-        });
-
-        test('should return a 400 if comment_id is not valid', () => {
-            checkCommentExists('cat')
-                .catch((err) => {
-                    expect(typeof err).toBe('object')
-                    expect(err.msg).toBe('Invalid input')
-                    expect(err.status).toBe(400)
+                .expect(400)
+                .then(({ body: { msg } }) => {
+                    expect(msg).toBe('Invalid input')
                 })
-        });
+        })
 
+        test('POST 404 /api/articles/69/comments - id out of range', () => {
+            return request(app)
+                .post('/api/articles/69/comments')
+                .send({
+                    username: 'butter_bridge',
+                    body: 'I like this article'
+                })
+                .expect(404)
+                .then(({ body: { msg } }) => {
+                    expect(msg).toBe('Not found')
+                })
+        })
 
-    });
+        test('POST 404 /api/articles/1/comments - author not in db (fkey violation)', () => {
+            return request(app)
+                .post('/api/articles/1/comments')
+                .send({
+                    username: 'koo',
+                    body: 'I like this article'
+                })
+                .expect(404)
+                .then(({ body: { msg } }) => {
+                    expect(msg).toBe('Not found')
+                })
+        })
+    })
+})
 
-
-    describe('/api/comments/:comment_id', () => {
-        describe('DELETE /api/comments/:comment_id', () => {
-            test('DELETE 204 /api/comments/1', () => {
-                return request(app)
-                    .delete('/api/comments/1')
-                    .expect(204)
-            });
-
-            test('DELETE 404 /api/comments/69', () => {
-                return request(app)
-                    .delete('/api/comments/69')
-                    .expect(404)
-                    .then(({ body: { msg } }) => {
-                        expect(msg).toBe('Not found')
-                    })
-            });
-
-            test('DELETE 400 /api/comments/cat', () => {
-                return request(app)
-                    .delete('/api/comments/cat')
-                    .expect(400)
-                    .then(({ body: { msg } }) => {
-                        expect(msg).toBe('Invalid input')
-                    })
-            });
-
-
-        });
-        describe('PATCH /api/comments/:comment_id', () => {
-            test('PATCH 200 /api/comments/1', () => {
-                return request(app)
-                    .patch('/api/comments/1')
-                    .send({ inc_votes: 1 })
-                    .expect(200)
-                    .then(({ body: { comment } }) => {
-                        expect(comment.votes).toBe(17)
-                        expect(comment.comment_id).toBe(1)
-                        expect(comment.body).toBe("Oh, I've got compassion running out of my nose, pal! I'm the Sultan of Sentiment!")
-                        expect(comment.author).toBe("butter_bridge")
-                        expect(comment.article_id).toBe(9)
-                        expect(comment.created_at).toBe("2020-04-06T12:17:00.000Z")
-                    })
+describe('checkArticleExists', () => {
+    test('should return a 404 if article_id is not present in table', () => {
+        checkArticleExists(69)
+            .catch((err) => {
+                expect(typeof err).toBe('object')
+                expect(err.msg).toBe('Not found')
+                expect(err.status).toBe(404)
             })
-            test('PATCH 200 /api/comments/1 - negative inc_votes', () => {
-                return request(app)
-                    .patch('/api/comments/1')
-                    .send({ inc_votes: -1 })
-                    .expect(200)
-                    .then(({ body: { comment } }) => {
-                        expect(comment.votes).toBe(15)
-                        expect(comment.comment_id).toBe(1)
-                        expect(comment.body).toBe("Oh, I've got compassion running out of my nose, pal! I'm the Sultan of Sentiment!")
-                        expect(comment.author).toBe("butter_bridge")
-                        expect(comment.article_id).toBe(9)
-                        expect(comment.created_at).toBe("2020-04-06T12:17:00.000Z")
-                    })
-            })
-            test('PATCH 200 /api/comments/1 - ignores extra keys', () => {
-                return request(app)
-                    .patch('/api/comments/1')
-                    .send({ inc_votes: -1, malicious_key: 69 })
-                    .expect(200)
-                    .then(({ body: { comment } }) => {
-                        expect(comment.votes).toBe(15)
-                        expect(comment.comment_id).toBe(1)
-                        expect(comment.body).toBe("Oh, I've got compassion running out of my nose, pal! I'm the Sultan of Sentiment!")
-                        expect(comment.author).toBe("butter_bridge")
-                        expect(comment.article_id).toBe(9)
-                        expect(comment.created_at).toBe("2020-04-06T12:17:00.000Z")
-                        expect(comment.malicious_key).toBe(undefined)
-                    })
-            })
-
-
-            test('PATCH 404 /api/comments/69 - comment_id does not exist', () => {
-                return request(app)
-                    .patch('/api/comments/69')
-                    .send({ inc_votes: 1 })
-                    .expect(404)
-                    .then(({ body: { msg } }) => {
-                        expect(msg).toBe('Not found')
-                    })
-            })
-            test('PATCH 400 /api/comments/cat - comment_id invalid', () => {
-                return request(app)
-                    .patch('/api/comments/cat')
-                    .send({ inc_votes: 1 })
-                    .expect(400)
-                    .then(({ body: { msg } }) => {
-                        expect(msg).toBe('Invalid input')
-                    })
-            })
-            test('PUT 405 /api/comments/1 - bad method', () => {
-                return request(app)
-                    .put('/api/comments/1')
-                    .send({ inc_votes: 1 })
-                    .expect(405)
-                    .then(({ body: { msg } }) => {
-                        expect(msg).toBe('Bad method')
-                    })
-            })
-
-        });
     })
 
-    describe('/api/users', () => {
-        describe('GET /api/users', () => {
-            test('GET 200 /api/users', () => {
-                return request(app)
-                    .get('/api/users')
-                    .expect(200)
-                    .then(({ body: { users } }) => {
-                        expect(users.length).toBe(4)
-                        users.forEach((user) => {
-                            expect(typeof user.username).toBe('string')
-                            expect(typeof user.name).toBe('string')
-                            expect(typeof user.avatar_url).toBe('string')
-                        })
-
-                    })
-            });
-
-            test('PATCH 405 /api/users', () => {
-                return request(app)
-                    .patch('/api/users')
-                    .expect(405)
-                    .then(({ body: { msg } }) => {
-                        expect(msg).toBe('Bad method')
-                    })
+    test('should return undefined if article_id is present in table', () => {
+        checkArticleExists(1)
+            .then((result) => {
+                expect(result).toBe(undefined)
             })
+    });
+
+    test('should return a 400 if article_id is not valid', () => {
+        checkArticleExists('cat')
+            .catch((err) => {
+                expect(typeof err).toBe('object')
+                expect(err.msg).toBe('Invalid input')
+                expect(err.status).toBe(400)
+            })
+    });
+
+
+});
+
+describe('checkCommentExists', () => {
+    test('should return a 404 if comment_id is not present in table', () => {
+        checkCommentExists(69)
+            .catch((err) => {
+                expect(typeof err).toBe('object')
+                expect(err.msg).toBe('Not found')
+                expect(err.status).toBe(404)
+            })
+    })
+
+    test('should return undefined if comment_id is present in table', () => {
+        checkCommentExists(1)
+            .then((result) => {
+                expect(result).toBe(undefined)
+            })
+    });
+
+    test('should return a 400 if comment_id is not valid', () => {
+        checkCommentExists('cat')
+            .catch((err) => {
+                expect(typeof err).toBe('object')
+                expect(err.msg).toBe('Invalid input')
+                expect(err.status).toBe(400)
+            })
+    });
+
+
+});
+
+
+describe('/api/comments/:comment_id', () => {
+    describe('DELETE /api/comments/:comment_id', () => {
+        test('DELETE 204 /api/comments/1', () => {
+            return request(app)
+                .delete('/api/comments/1')
+                .expect(204)
+        });
+
+        test('DELETE 404 /api/comments/69', () => {
+            return request(app)
+                .delete('/api/comments/69')
+                .expect(404)
+                .then(({ body: { msg } }) => {
+                    expect(msg).toBe('Not found')
+                })
+        });
+
+        test('DELETE 400 /api/comments/cat', () => {
+            return request(app)
+                .delete('/api/comments/cat')
+                .expect(400)
+                .then(({ body: { msg } }) => {
+                    expect(msg).toBe('Invalid input')
+                })
         });
 
 
+    });
+    describe('PATCH /api/comments/:comment_id', () => {
+        test('PATCH 200 /api/comments/1', () => {
+            return request(app)
+                .patch('/api/comments/1')
+                .send({ inc_votes: 1 })
+                .expect(200)
+                .then(({ body: { comment } }) => {
+                    expect(comment.votes).toBe(17)
+                    expect(comment.comment_id).toBe(1)
+                    expect(comment.body).toBe("Oh, I've got compassion running out of my nose, pal! I'm the Sultan of Sentiment!")
+                    expect(comment.author).toBe("butter_bridge")
+                    expect(comment.article_id).toBe(9)
+                    expect(comment.created_at).toBe("2020-04-06T12:17:00.000Z")
+                })
+        })
+        test('PATCH 200 /api/comments/1 - negative inc_votes', () => {
+            return request(app)
+                .patch('/api/comments/1')
+                .send({ inc_votes: -1 })
+                .expect(200)
+                .then(({ body: { comment } }) => {
+                    expect(comment.votes).toBe(15)
+                    expect(comment.comment_id).toBe(1)
+                    expect(comment.body).toBe("Oh, I've got compassion running out of my nose, pal! I'm the Sultan of Sentiment!")
+                    expect(comment.author).toBe("butter_bridge")
+                    expect(comment.article_id).toBe(9)
+                    expect(comment.created_at).toBe("2020-04-06T12:17:00.000Z")
+                })
+        })
+        test('PATCH 200 /api/comments/1 - ignores extra keys', () => {
+            return request(app)
+                .patch('/api/comments/1')
+                .send({ inc_votes: -1, malicious_key: 69 })
+                .expect(200)
+                .then(({ body: { comment } }) => {
+                    expect(comment.votes).toBe(15)
+                    expect(comment.comment_id).toBe(1)
+                    expect(comment.body).toBe("Oh, I've got compassion running out of my nose, pal! I'm the Sultan of Sentiment!")
+                    expect(comment.author).toBe("butter_bridge")
+                    expect(comment.article_id).toBe(9)
+                    expect(comment.created_at).toBe("2020-04-06T12:17:00.000Z")
+                    expect(comment.malicious_key).toBe(undefined)
+                })
+        })
 
 
+        test('PATCH 404 /api/comments/69 - comment_id does not exist', () => {
+            return request(app)
+                .patch('/api/comments/69')
+                .send({ inc_votes: 1 })
+                .expect(404)
+                .then(({ body: { msg } }) => {
+                    expect(msg).toBe('Not found')
+                })
+        })
+        test('PATCH 400 /api/comments/cat - comment_id invalid', () => {
+            return request(app)
+                .patch('/api/comments/cat')
+                .send({ inc_votes: 1 })
+                .expect(400)
+                .then(({ body: { msg } }) => {
+                    expect(msg).toBe('Invalid input')
+                })
+        })
+        test('PUT 405 /api/comments/1 - bad method', () => {
+            return request(app)
+                .put('/api/comments/1')
+                .send({ inc_votes: 1 })
+                .expect(405)
+                .then(({ body: { msg } }) => {
+                    expect(msg).toBe('Bad method')
+                })
+        })
 
-        describe('GET /api/users/:username', () => {
-            test('GET 200 /api/users/butter_bridge', () => {
-                return request(app)
-                    .get('/api/users/butter_bridge')
-                    .expect(200)
-                    .then(({ body: { user } }) => {
-                        expect(user.username).toBe('butter_bridge')
-                        expect(user.name).toBe('jonny')
-                        expect(user.avatar_url).toBe('https://www.healthytherapies.com/wp-content/uploads/2016/06/Lime3.jpg')
+    });
+})
 
+describe('/api/users', () => {
+    describe('GET /api/users', () => {
+        test('GET 200 /api/users', () => {
+            return request(app)
+                .get('/api/users')
+                .expect(200)
+                .then(({ body: { users } }) => {
+                    expect(users.length).toBe(4)
+                    users.forEach((user) => {
+                        expect(typeof user.username).toBe('string')
+                        expect(typeof user.name).toBe('string')
+                        expect(typeof user.avatar_url).toBe('string')
                     })
-            })
 
-            test('GET 404 /api/users/notauser', () => {
-                return request(app)
-                    .get('/api/users/notauser')
-                    .expect(404)
-                    .then(({ body: { msg } }) => {
-                        expect(msg).toBe('Not found')
-                    })
+                })
+        });
 
-            })
-            test('PATCH 405 /api/users/butter_bridge', () => {
-                return request(app)
-                    .patch('/api/users/butter_bridge')
-                    .expect(405)
-                    .then(({ body: { msg } }) => {
-                        expect(msg).toBe('Bad method')
-                    })
-
-            })
-            test('DELETE 405 /api/users/butter_bridge', () => {
-                return request(app)
-                    .delete('/api/users/butter_bridge')
-                    .expect(405)
-                    .then(({ body: { msg } }) => {
-                        expect(msg).toBe('Bad method')
-                    })
-            })
-
+        test('PATCH 405 /api/users', () => {
+            return request(app)
+                .patch('/api/users')
+                .expect(405)
+                .then(({ body: { msg } }) => {
+                    expect(msg).toBe('Bad method')
+                })
         })
     });
+
+
+
+
+
+    describe('GET /api/users/:username', () => {
+        test('GET 200 /api/users/butter_bridge', () => {
+            return request(app)
+                .get('/api/users/butter_bridge')
+                .expect(200)
+                .then(({ body: { user } }) => {
+                    expect(user.username).toBe('butter_bridge')
+                    expect(user.name).toBe('jonny')
+                    expect(user.avatar_url).toBe('https://www.healthytherapies.com/wp-content/uploads/2016/06/Lime3.jpg')
+
+                })
+        })
+
+        test('GET 404 /api/users/notauser', () => {
+            return request(app)
+                .get('/api/users/notauser')
+                .expect(404)
+                .then(({ body: { msg } }) => {
+                    expect(msg).toBe('Not found')
+                })
+
+        })
+        test('PATCH 405 /api/users/butter_bridge', () => {
+            return request(app)
+                .patch('/api/users/butter_bridge')
+                .expect(405)
+                .then(({ body: { msg } }) => {
+                    expect(msg).toBe('Bad method')
+                })
+
+        })
+        test('DELETE 405 /api/users/butter_bridge', () => {
+            return request(app)
+                .delete('/api/users/butter_bridge')
+                .expect(405)
+                .then(({ body: { msg } }) => {
+                    expect(msg).toBe('Bad method')
+                })
+        })
+
+    })
+});
 
