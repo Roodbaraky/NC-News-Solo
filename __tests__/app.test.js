@@ -554,84 +554,152 @@ describe('/api/comments/:comment_id', () => {
 
 
     });
-
-
-});
-
-describe('/api/users', () => {
-    describe('GET /api/users', () => {
-        test('200 GET /api/users', () => {
+    describe('PATCH /api/comments/:comment_id', () => {
+        test('PATCH 200 /api/comments/1', () => {
             return request(app)
-                .get('/api/users')
+                .patch('/api/comments/1')
+                .send({ inc_votes: 1 })
                 .expect(200)
-                .then(({ body: { users } }) => {
-                    expect(users.length).toBe(4)
-                    users.forEach((user) => {
-                        expect(typeof user.username).toBe('string')
-                        expect(typeof user.name).toBe('string')
-                        expect(typeof user.avatar_url).toBe('string')
-                    })
-
+                .then(({ body: { comment } }) => {
+                    expect(comment.votes).toBe(17)
+                    expect(comment.comment_id).toBe(1)
+                    expect(comment.body).toBe("Oh, I've got compassion running out of my nose, pal! I'm the Sultan of Sentiment!")
+                    expect(comment.author).toBe("butter_bridge")
+                    expect(comment.article_id).toBe(9)
+                    expect(comment.created_at).toBe("2020-04-06T12:17:00.000Z")
                 })
-        });
-
-        test('405 NOT GET /api/users', () => {
+        })
+        test('PATCH 200 /api/comments/1 - negative inc_votes', () => {
             return request(app)
-                .patch('/api/users')
+                .patch('/api/comments/1')
+                .send({ inc_votes: -1 })
+                .expect(200)
+                .then(({ body: { comment } }) => {
+                    expect(comment.votes).toBe(15)
+                    expect(comment.comment_id).toBe(1)
+                    expect(comment.body).toBe("Oh, I've got compassion running out of my nose, pal! I'm the Sultan of Sentiment!")
+                    expect(comment.author).toBe("butter_bridge")
+                    expect(comment.article_id).toBe(9)
+                    expect(comment.created_at).toBe("2020-04-06T12:17:00.000Z")
+                })
+        })
+        test('PATCH 200 /api/comments/1 - ignores extra keys', () => {
+            return request(app)
+                .patch('/api/comments/1')
+                .send({ inc_votes: -1, malicious_key: 69 })
+                .expect(200)
+                .then(({ body: { comment } }) => {
+                    expect(comment.votes).toBe(15)
+                    expect(comment.comment_id).toBe(1)
+                    expect(comment.body).toBe("Oh, I've got compassion running out of my nose, pal! I'm the Sultan of Sentiment!")
+                    expect(comment.author).toBe("butter_bridge")
+                    expect(comment.article_id).toBe(9)
+                    expect(comment.created_at).toBe("2020-04-06T12:17:00.000Z")
+                    expect(comment.malicious_key).toBe(undefined)
+                })
+        })
+
+
+        test('PATCH 404 /api/comments/69 - comment_id does not exist', () => {
+            return request(app)
+                .patch('/api/comments/69')
+                .send({ inc_votes: 1 })
+                .expect(404)
+                .then(({ body: { msg } }) => {
+                    expect(msg).toBe('Not found')
+                })
+        })
+        test('PATCH 400 /api/comments/cat - comment_id invalid', () => {
+            return request(app)
+                .patch('/api/comments/cat')
+                .send({ inc_votes: 1 })
+                .expect(400)
+                .then(({ body: { msg } }) => {
+                    expect(msg).toBe('Invalid input')
+                })
+        })
+        test('PUT 405 /api/comments/1 - bad method', () => {
+            return request(app)
+                .put('/api/comments/1')
+                .send({ inc_votes: 1 })
                 .expect(405)
                 .then(({ body: { msg } }) => {
                     expect(msg).toBe('Bad method')
                 })
         })
+
     });
 
+    describe('/api/users', () => {
+        describe('GET /api/users', () => {
+            test('GET 200 /api/users', () => {
+                return request(app)
+                    .get('/api/users')
+                    .expect(200)
+                    .then(({ body: { users } }) => {
+                        expect(users.length).toBe(4)
+                        users.forEach((user) => {
+                            expect(typeof user.username).toBe('string')
+                            expect(typeof user.name).toBe('string')
+                            expect(typeof user.avatar_url).toBe('string')
+                        })
 
+                    })
+            });
 
-});
-
-describe('GET /api/users/:username', () => {
-    test('200 GET /api/users/butter_bridge', () => {
-        return request(app)
-            .get('/api/users/butter_bridge')
-            .expect(200)
-            .then(({ body: { user } }) => {
-                expect(user.username).toBe('butter_bridge')
-                expect(user.name).toBe('jonny')
-                expect(user.avatar_url).toBe('https://www.healthytherapies.com/wp-content/uploads/2016/06/Lime3.jpg')
-
+            test('PATCH 405 /api/users', () => {
+                return request(app)
+                    .patch('/api/users')
+                    .expect(405)
+                    .then(({ body: { msg } }) => {
+                        expect(msg).toBe('Bad method')
+                    })
             })
+        });
+
+
+
+    });
+
+    describe('GET /api/users/:username', () => {
+        test('GET 200 /api/users/butter_bridge', () => {
+            return request(app)
+                .get('/api/users/butter_bridge')
+                .expect(200)
+                .then(({ body: { user } }) => {
+                    expect(user.username).toBe('butter_bridge')
+                    expect(user.name).toBe('jonny')
+                    expect(user.avatar_url).toBe('https://www.healthytherapies.com/wp-content/uploads/2016/06/Lime3.jpg')
+
+                })
+        })
+
+        test('GET 404 /api/users/notauser', () => {
+            return request(app)
+                .get('/api/users/notauser')
+                .expect(404)
+                .then(({ body: { msg } }) => {
+                    expect(msg).toBe('Not found')
+                })
+
+        })
+        test('PATCH 405 /api/users/butter_bridge', () => {
+            return request(app)
+                .patch('/api/users/butter_bridge')
+                .expect(405)
+                .then(({ body: { msg } }) => {
+                    expect(msg).toBe('Bad method')
+                })
+
+        })
+        test('DELETE 405 /api/users/butter_bridge', () => {
+            return request(app)
+                .delete('/api/users/butter_bridge')
+                .expect(405)
+                .then(({ body: { msg } }) => {
+                    expect(msg).toBe('Bad method')
+                })
+        })
+
     })
-
-    test('404 GET /api/users/notauser', () => {
-        return request(app)
-            .get('/api/users/notauser')
-            .expect(404)
-            .then(({ body: { msg } }) => {
-                expect(msg).toBe('Not found')
-            })
-
-    })
-    test('405 PATCH /api/users/butter_bridge', () => {
-        return request(app)
-            .patch('/api/users/butter_bridge')
-            .expect(405)
-            .then(({ body: { msg } }) => {
-                expect(msg).toBe('Bad method')
-            })
-
-    })
-    test('405 DELETE /api/users/butter_bridge', () => {
-        return request(app)
-            .delete('/api/users/butter_bridge')
-            .expect(405)
-            .then(({ body: { msg } }) => {
-                expect(msg).toBe('Bad method')
-            })
-
-    })
-
 })
-
-
-
-
