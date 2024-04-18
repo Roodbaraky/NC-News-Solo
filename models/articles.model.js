@@ -129,7 +129,12 @@ exports.postArticleCommentsById = (article_id, comment) => {
     const { username, body } = comment
     article_id = +article_id
 
-    return db.query(`INSERT INTO comments (article_id, author, body) VALUES ($1, $2, $3) RETURNING *;`, [article_id, username, body])
+    return db.query(`
+    INSERT INTO comments
+    (article_id, author, body)
+    VALUES
+    ($1, $2, $3)
+    RETURNING *;`, [article_id, username, body])
         .then(({ rows }) => {
             return rows
         })
@@ -140,5 +145,26 @@ exports.updateArticleById = (article_id, update) => {
     return db.query(`UPDATE articles SET votes = votes + $2 WHERE article_id = $1 RETURNING *;`, [article_id, inc_votes])
         .then(({ rows }) => {
             return rows
+        })
+}
+
+exports.postArticle = (article) => {
+    const { title, topic, author, body, article_img_url } = article
+    const valueArr = [title, topic, author, body, article_img_url]
+    return db.query(`
+    INSERT INTO articles
+    (title, topic, author, body, article_img_url)
+    VALUES
+    ($1, $2, $3, $4, $5)
+    RETURNING *,
+    (
+        SELECT COUNT(*)
+        FROM comments
+        WHERE comments.article_id = articles.article_id
+    )
+    ::INTEGER AS comment_count;
+    `, valueArr)
+        .then(({ rows }) => {
+            return rows[0]
         })
 }
