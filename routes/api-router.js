@@ -6,7 +6,6 @@ const usersRouter = require('./users-router')
 const commentsRouter = require('./comments-router')
 const { methodNotAllowed } = require('../errors/index')
 const { getTopics } = require('../controllers/topics.controller');
-const { getUsers } = require('../controllers/users.controller');
 
 
 
@@ -28,9 +27,8 @@ apiRouter
 
 
 apiRouter
-    .route('/users')
-    .get(getUsers)
-    .all(methodNotAllowed)
+    .use('/users', usersRouter)
+    
 
 apiRouter
     .use('/comments', commentsRouter)
