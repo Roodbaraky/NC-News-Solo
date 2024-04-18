@@ -1,7 +1,15 @@
-const apiRouter = require('express').Router();
+const { getUsers, getUserByUsername } = require('../controllers/users.controller');
+const { methodNotAllowed } = require('../errors');
 
-apiRouter.get('/', (req, res) => {
-  res.status(200).send('All OK from API Router');
-});
+const usersRouter = require('express').Router();
 
-module.exports = apiRouter;
+usersRouter
+  .route('/')
+  .get(getUsers)
+  .all(methodNotAllowed)
+
+usersRouter
+  .route('/:username')
+  .get(getUserByUsername)
+  .all(methodNotAllowed)
+module.exports = usersRouter;

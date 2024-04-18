@@ -560,7 +560,7 @@ describe('/api/comments/:comment_id', () => {
 
 describe('/api/users', () => {
     describe('GET /api/users', () => {
-        test('GET 200 /api/users', () => {
+        test('200 GET /api/users', () => {
             return request(app)
                 .get('/api/users')
                 .expect(200)
@@ -575,7 +575,63 @@ describe('/api/users', () => {
                 })
         });
 
-
-
+        test('405 NOT GET /api/users', () => {
+            return request(app)
+                .patch('/api/users')
+                .expect(405)
+                .then(({ body: { msg } }) => {
+                    expect(msg).toBe('Bad method')
+                })
+        })
     });
+
+
+
 });
+
+describe('GET /api/users/:username', () => {
+    test('200 GET /api/users/butter_bridge', () => {
+        return request(app)
+            .get('/api/users/butter_bridge')
+            .expect(200)
+            .then(({ body: { user } }) => {
+                expect(user.username).toBe('butter_bridge')
+                expect(user.name).toBe('jonny')
+                expect(user.avatar_url).toBe('https://www.healthytherapies.com/wp-content/uploads/2016/06/Lime3.jpg')
+
+            })
+    })
+
+    test('404 GET /api/users/notauser', () => {
+        return request(app)
+            .get('/api/users/notauser')
+            .expect(404)
+            .then(({ body: { msg } }) => {
+                expect(msg).toBe('Not found')
+            })
+
+    })
+    test('405 PATCH /api/users/butter_bridge', () => {
+        return request(app)
+            .patch('/api/users/butter_bridge')
+            .expect(405)
+            .then(({ body: { msg } }) => {
+                expect(msg).toBe('Bad method')
+            })
+
+    })
+    test('405 DELETE /api/users/butter_bridge', () => {
+        return request(app)
+            .delete('/api/users/butter_bridge')
+            .expect(405)
+            .then(({ body: { msg } }) => {
+                expect(msg).toBe('Bad method')
+            })
+
+    })
+
+})
+
+
+
+
