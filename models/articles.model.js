@@ -221,7 +221,7 @@ exports.updateArticleById = (article_id, update) => {
 }
 
 exports.postArticle = (article) => {
-    const { title, topic, author, body, article_img_url } = article
+    const { title, topic, author, body, article_img_url = 'default' } = article
     const valueArr = [title, topic, author, body, article_img_url]
     return db.query(`
     INSERT INTO articles
