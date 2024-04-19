@@ -8,16 +8,6 @@ const queries = [
     "limit",
     "p"
 ]
-const columns = [
-    'article_id',
-    'title',
-    'topic',
-    'author',
-    'created_at',
-    'votes',
-    'article_img_url',
-    'comment_count'
-]
 exports.fetchArticles = (query) => {
     let queryString = ``
     const SQLString = `
@@ -33,6 +23,7 @@ exports.fetchArticles = (query) => {
     FROM articles
     LEFT JOIN comments
     ON comments.article_id=articles.article_id`
+    
     const SQLString2 = `
         SELECT
         COUNT(comments.article_id)::INTEGER AS comment_count
@@ -54,11 +45,7 @@ exports.fetchArticles = (query) => {
         if (!queryKeys.every((key) => queries.includes(key))) {
             return err400()
         }
-
         if (sort_by) {
-            if (!columns.includes(sort_by)) {
-                return err404()
-            }
             orderByString = ` ORDER BY articles.${sort_by} DESC`
             if (sort_by === 'comment_count') {
                 orderByString = ` ORDER BY ${sort_by} DESC`
@@ -70,8 +57,13 @@ exports.fetchArticles = (query) => {
             orderByString = ` ORDER BY articles.${sort_by || 'created_at'} ${order}`
         }
 
-        if (topic) {queryString = ` WHERE topic = '${topic}'`}
-        
+        if (topic) {
+            queryString = `
+        WHERE EXISTS
+        (SELECT slug FROM topics WHERE slug = '${topic}')
+        AND topic = '${topic}'`
+        }
+
         if (limit || p) {
             if (isNaN(+limit) && isNaN(+p)) { return err400() }
             const pages = useLimit * (+p - 1)
@@ -80,7 +72,7 @@ exports.fetchArticles = (query) => {
     }
 
     const mainDbQuery = db.query(`${SQLString}${queryString}${groupByString}${orderByString}${limitString}`)
-    const totalCountQuery = db.query(`${SQLString2}${queryString}${groupByString}${orderByString}`)
+    const totalCountQuery = db.query(`${SQLString2}${queryString}${groupByString}`)
     return Promise.all([mainDbQuery, totalCountQuery])
         .then(([{ rows }, totalCountReturn]) => {
             const totalCount = totalCountReturn.rows.length
@@ -215,27 +207,19 @@ exports.postArticle = (article) => {
 
 exports.deleteArticleById = (article_id) => {
     if (isNaN(+article_id)) { return err400() }
-    const commentsQuery = db.query(`DELETE FROM comments WHERE article_id = $1 RETURNING *;`, [article_id])
-    const articlesQuery = db.query(`DELETE FROM articles WHERE article_id = $1 RETURNING *;`, [article_id])
-    return commentsQuery
-        .then(() => {
-            return articlesQuery
-        })
+    return db.query(`
+    WITH deletedComments AS
+    (
+    DELETE FROM comments
+    WHERE article_id = $1
+    RETURNING article_id
+    )
+    DELETE FROM articles
+    WHERE article_id = $1 RETURNING *;`, [article_id])
         .then(({ rows }) => {
             if (!rows.length) {
                 return err404()
             }
             return rows
         })
-}
-
-exports.checkTopicExists = (topic) => {
-    const topics = db.query(`SELECT slug FROM topics;`)
-        .then(({ rows }) => {
-            const topicsArr = rows.map(topic => topic["slug"])
-            return topicsArr.includes(topic)
-                ? true
-                : false
-        })
-
 }
