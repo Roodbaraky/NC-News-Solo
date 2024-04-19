@@ -42,7 +42,7 @@ describe('/api/topics', () => {
                 })
         });
     })
-    describe.only('POST /api/topics', () => {
+    describe('POST /api/topics', () => {
         test('POST 201 /api/topics', () => {
             return request(app)
                 .post('/api/topics')
@@ -532,6 +532,33 @@ describe('/api/articles/:article_id', () => {
                     expect(msg).toBe('Not found')
                 })
         });
+    })
+    describe('DELETE /api/articles/:article_id', () => {
+        test('DELETE 204 /api/articles/1', () => {
+            return request(app)
+                .delete('/api/articles/1')
+                .expect(204)
+                .then(({ body }) => {
+                    expect(body).toEqual({})
+                })
+        })
+
+        test('DELETE 404 /api/articles/69 - article does not exist', () => {
+            return request(app)
+                .delete('/api/articles/69')
+                .expect(404)
+                .then(({ body: { msg } }) => {
+                    expect(msg).toBe('Not found')
+                })
+        })
+        test('DELETE 400 /api/articles/cat - article_id is not valid', () => {
+            return request(app)
+                .delete('/api/articles/cat')
+                .expect(400)
+                .then(({ body: { msg } }) => {
+                    expect(msg).toBe('Invalid input')
+                })
+        })
     })
 })
 

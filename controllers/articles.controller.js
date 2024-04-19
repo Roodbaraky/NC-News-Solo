@@ -1,7 +1,7 @@
 const express = require("express");
 const app = express();
 const index = require('../db/data/test-data/index')
-const { fetchArticles, fetchArticlesById, fetchArticleCommentsById, postArticleCommentsById, checkArticleExists, updateArticleById, postArticle } = require('../models/articles.model')
+const { deleteArticleById, fetchArticles, fetchArticlesById, fetchArticleCommentsById, postArticleCommentsById, checkArticleExists, updateArticleById, postArticle } = require('../models/articles.model')
 app.use(express.json)
 
 exports.getArticlesById = (req, res, next) => {
@@ -52,10 +52,19 @@ exports.editArticleById = (req, res, next) => {
 }
 
 exports.addArticle = (req, res, next) => {
-    const  article = req.body
+    const article = req.body
     postArticle(article)
         .then((newArticle) => {
             res.status(200).send({ newArticle })
         })
         .catch(next)
-} 
+}
+
+exports.removeArticleById = (req, res, next) => {
+    const { article_id } = req.params
+    return deleteArticleById(article_id)
+        .then((noContent) => {
+            res.status(204).send(noContent)
+        })
+        .catch(next)
+}

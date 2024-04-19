@@ -240,3 +240,19 @@ exports.postArticle = (article) => {
             return rows[0]
         })
 }
+
+exports.deleteArticleById = (article_id) => {
+    if (isNaN(+article_id)) { return Promise.reject({ status: 400, msg: "Invalid input" }) }
+    const commentsQuery = db.query(`DELETE FROM comments WHERE article_id = $1 RETURNING *;`, [article_id])
+    const articlesQuery = db.query(`DELETE FROM articles WHERE article_id = $1 RETURNING *;`, [article_id])
+    return commentsQuery
+        .then(() => {
+            return articlesQuery
+        })
+        .then(({ rows }) => {
+            if (!rows.length) {
+                return Promise.reject({ status: 404, msg: "Not found" })
+            }
+            return rows
+        })
+}
