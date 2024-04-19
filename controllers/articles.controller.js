@@ -1,6 +1,5 @@
 const express = require("express");
 const app = express();
-const index = require('../db/data/test-data/index')
 const { deleteArticleById, fetchArticles, fetchArticlesById, fetchArticleCommentsById, postArticleCommentsById, checkArticleExists, updateArticleById, postArticle } = require('../models/articles.model')
 app.use(express.json)
 
