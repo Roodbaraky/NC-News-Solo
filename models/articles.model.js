@@ -23,6 +23,7 @@ exports.fetchArticles = (query) => {
     FROM articles
     LEFT JOIN comments
     ON comments.article_id=articles.article_id`
+    
     const SQLString2 = `
         SELECT
         COUNT(comments.article_id)::INTEGER AS comment_count
@@ -44,7 +45,6 @@ exports.fetchArticles = (query) => {
         if (!queryKeys.every((key) => queries.includes(key))) {
             return err400()
         }
-
         if (sort_by) {
             orderByString = ` ORDER BY articles.${sort_by} DESC`
             if (sort_by === 'comment_count') {
@@ -72,7 +72,7 @@ exports.fetchArticles = (query) => {
     }
 
     const mainDbQuery = db.query(`${SQLString}${queryString}${groupByString}${orderByString}${limitString}`)
-    const totalCountQuery = db.query(`${SQLString2}${queryString}${groupByString}${orderByString}`)
+    const totalCountQuery = db.query(`${SQLString2}${queryString}${groupByString}`)
     return Promise.all([mainDbQuery, totalCountQuery])
         .then(([{ rows }, totalCountReturn]) => {
             const totalCount = totalCountReturn.rows.length
