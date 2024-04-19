@@ -340,6 +340,29 @@ describe('/api/articles', () => {
                     expect(comment_count).toBe(0)
                 })
         })
+        test('POST 200 /api/articles - avatar URL defaults if omitted', () => {
+            return request(app)
+                .post('/api/articles')
+                .send({
+                    author: 'butter_bridge',
+                    title: 'testarticle',
+                    body: 'testbody',
+                    topic: 'mitch'
+                })
+                .expect(200)
+                .then(({ body: { newArticle } }) => {
+                    const { title, topic, author, body, article_img_url, created_at, votes, article_id, comment_count } = newArticle
+                    expect(title).toBe('testarticle')
+                    expect(article_id).toBe(14)
+                    expect(topic).toBe('mitch')
+                    expect(author).toBe('butter_bridge')
+                    expect(body).toBe('testbody')
+                    expect(typeof created_at).toBe('string')
+                    expect(votes).toBe(0)
+                    expect(article_img_url).toBe('default')
+                    expect(comment_count).toBe(0)
+                })
+        })
         test('POST 200 /api/articles - ignores extra keys', () => {
             return request(app)
                 .post('/api/articles')
