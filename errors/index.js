@@ -34,3 +34,8 @@ exports.catchAll = (req, res, next) => {
 exports.methodNotAllowed = (req, res, next) => {
     res.status(405).send({ msg: 'Bad method' })
 }
+exports.err404 = () => {
+    return Promise.reject({ status: 404, msg: "Not found" })}
+exports.err400 = () => {
+    return Promise.reject({ status: 400, msg: "Invalid input" })
+}

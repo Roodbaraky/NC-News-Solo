@@ -1,23 +1,24 @@
 const db = require('../db/connection')
+const { err404, err400 } = require('../errors/index')
+const queries = [
+    "author",
+    "topic",
+    "sort_by",
+    "order",
+    "limit",
+    "p"
+]
+const columns = [
+    'article_id',
+    'title',
+    'topic',
+    'author',
+    'created_at',
+    'votes',
+    'article_img_url',
+    'comment_count'
+]
 exports.fetchArticles = (query) => {
-    const queries = [
-        "author",
-        "topic",
-        "sort_by",
-        "order",
-        "limit",
-        "p"
-    ]
-    const columns = [
-        'article_id',
-        'title',
-        'topic',
-        'author',
-        'created_at',
-        'votes',
-        'article_img_url',
-        'comment_count'
-    ]
     let queryString = ``
     const SQLString = `
     SELECT
@@ -51,12 +52,12 @@ exports.fetchArticles = (query) => {
         const { author, topic, sort_by, order, limit, p } = query
         let useLimit = limit || 10
         if (!queryKeys.every((key) => queries.includes(key))) {
-            return Promise.reject({ status: 400, msg: "Invalid input" })
+            return err400()
         }
 
         if (sort_by) {
             if (!columns.includes(sort_by)) {
-                return Promise.reject({ status: 404, msg: "Not found" })
+                return err404()
             }
             orderByString = ` ORDER BY articles.${sort_by} DESC`
             if (sort_by === 'comment_count') {
@@ -65,26 +66,17 @@ exports.fetchArticles = (query) => {
         }
 
         if (order) {
-            if (!orderValues.includes(order)) { return Promise.reject({ status: 400, msg: "Invalid input" }) }
+            if (!orderValues.includes(order)) { return err400() }
             orderByString = ` ORDER BY articles.${sort_by || 'created_at'} ${order}`
         }
 
-
-        if (topic) {
-            queryString = ` WHERE topic = '${topic}'`
-        }
-        if (limit) {
-            if (isNaN(+limit)) return Promise.reject({ status: 400, msg: "Invalid input" })
-            const pages = +limit * (+p - 1)
+        if (topic) {queryString = ` WHERE topic = '${topic}'`}
+        
+        if (limit || p) {
+            if (isNaN(+limit) && isNaN(+p)) { return err400() }
+            const pages = useLimit * (+p - 1)
             limitString = ` LIMIT ${useLimit || 'ALL'} OFFSET ${pages || 0}`
         }
-        else if (p) {
-            if (isNaN(+p)) return Promise.reject({ status: 400, msg: "Invalid input" })
-
-            const pages = 10 * (+p - 1)
-            limitString = ` LIMIT ${useLimit || 'ALL'} OFFSET ${pages || 0}`
-        }
-
     }
 
     const mainDbQuery = db.query(`${SQLString}${queryString}${groupByString}${orderByString}${limitString}`)
@@ -93,7 +85,7 @@ exports.fetchArticles = (query) => {
         .then(([{ rows }, totalCountReturn]) => {
             const totalCount = totalCountReturn.rows.length
             if (!rows.length) {
-                return Promise.reject({ status: 404, msg: "Not found" })
+                return err404()
             }
             return totalCount === rows.length
                 ? rows
@@ -122,7 +114,7 @@ exports.fetchArticlesById = (article_id) => {
     return db.query(SQLString + whereString + groupByString, [article_id])
         .then(({ rows }) => {
             if (!rows.length) {
-                return Promise.reject({ status: 404, msg: "Not found" })
+                return err404()
             }
 
             return rows[0]
@@ -131,7 +123,7 @@ exports.fetchArticlesById = (article_id) => {
 
 exports.checkArticleExists = (article_id) => {
     if (isNaN(+article_id)) {
-        return Promise.reject({ status: 400, msg: "Invalid input" })
+        return err400()
     }
     return db.query(`
     SELECT *
@@ -140,29 +132,18 @@ exports.checkArticleExists = (article_id) => {
     `, [article_id])
         .then(({ rows }) => {
             if (!rows.length) {
-                return Promise.reject({ status: 404, msg: "Not found" })
+                return err404()
             }
         })
 }
 
 
 exports.fetchArticleCommentsById = (article_id, query) => {
-    const queries = [
-        "author",
-        "topic",
-        "sort_by",
-        "order",
-        "limit",
-        "p"
-    ]
     const queryKeys = Object.keys(query)
     const { p, limit } = query
     let useLimit = limit || 10
     if (queryKeys.length !== 0) {
-
-        if (!queryKeys.every((key) => queries.includes(key))) {
-            return Promise.reject({ status: 400, msg: "Invalid input" })
-        }
+        if (!queryKeys.every((key) => queries.includes(key))) { return err400() }
     }
     const SQLString = `
             SELECT *
@@ -171,17 +152,12 @@ exports.fetchArticleCommentsById = (article_id, query) => {
             ORDER BY created_at DESC
             `
     let limitString = ``
-    if (limit) {
-        if (isNaN(+limit)) { return Promise.reject({ status: 400, msg: "Invalid input" }) }
-        const pages = +limit * (+p - 1)
+    if (limit || p) {
+        if (isNaN(+limit) && isNaN(+p)) { return err400() }
+        const pages = useLimit * (+p - 1)
         limitString = ` LIMIT ${useLimit || 'ALL'} OFFSET ${pages || 0}`
     }
-    else if (p) {
-        if (isNaN(+p)) { return Promise.reject({ status: 400, msg: "Invalid input" }) }
 
-        const pages = 10 * (+p - 1)
-        limitString = ` LIMIT ${useLimit || 'ALL'} OFFSET ${pages || 0}`
-    }
     return db.query(`${SQLString}${limitString}`, [article_id])
         .then(({ rows }) => {
             return rows
@@ -238,7 +214,7 @@ exports.postArticle = (article) => {
 }
 
 exports.deleteArticleById = (article_id) => {
-    if (isNaN(+article_id)) { return Promise.reject({ status: 400, msg: "Invalid input" }) }
+    if (isNaN(+article_id)) { return err400() }
     const commentsQuery = db.query(`DELETE FROM comments WHERE article_id = $1 RETURNING *;`, [article_id])
     const articlesQuery = db.query(`DELETE FROM articles WHERE article_id = $1 RETURNING *;`, [article_id])
     return commentsQuery
@@ -247,8 +223,19 @@ exports.deleteArticleById = (article_id) => {
         })
         .then(({ rows }) => {
             if (!rows.length) {
-                return Promise.reject({ status: 404, msg: "Not found" })
+                return err404()
             }
             return rows
         })
+}
+
+exports.checkTopicExists = (topic) => {
+    const topics = db.query(`SELECT slug FROM topics;`)
+        .then(({ rows }) => {
+            const topicsArr = rows.map(topic => topic["slug"])
+            return topicsArr.includes(topic)
+                ? true
+                : false
+        })
+
 }

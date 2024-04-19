@@ -251,7 +251,6 @@ describe('/api/articles', () => {
                         })
                     })
             })
-
         })
         describe('GET /api/articles?limit=?p= - FEATURE REQUEST - PAGINATION', () => {
             test('GET 200 /api/articles?limit=10&p=1 - return 1st page only', () => {
