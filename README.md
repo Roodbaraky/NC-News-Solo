@@ -66,7 +66,7 @@ https://nc-news-solo-kr.onrender.com/
 - please make a request such as GET /api to view the available endpoints
 
 # NC News
-The RESTful API for NC News is accessed as follows:
+The RESTful API for NC News can be used as follows:
 
 ## Get available endpoints
 ##### Request
@@ -74,60 +74,24 @@ The RESTful API for NC News is accessed as follows:
 GET /api
 ```
 - returns an object of the available endpoints with descriptions of their available methods, queries, example responses etc.
-### Get users
-##### Request
-```
-GET /api/users
-```
-- returns an array of all the user objects.
-
-### Get topics
-##### Request
-```
-GET /api/topics
-```
-- returns an array of all the topic objects with slug and description properties.
-
-### Get articles
-##### Request
-```
-GET /api/articles
-```
-- returns an array of all article objects. 
-
-#### Get articles by id
-##### Request
-```
-GET /api/articles/:article_id
-```
-- returns an article object corresponding to the article_id passed as a parameter.
+- from here, you can use the api to perform various functions, as detailed below
 
 
-#### Get comments by (article) id
-##### Request
-```
-GET /api/articles/:article_id/comments
-```
-- returns an array containing comment objects corresponding to the article_id passed as a parameter.
+## Retrieve data
+- all primary endpoints, with the exception of *'/comments'* have a *'Get All' * method, which allows you to retrieve all the data from respective tables.
+- secondary parametric endpoints, again, with the exception of *':/comment_id'*, allow you to retrieve all the properties of the object/s corresponding to the inputted identifier.
 
-### Post a comment to an article
-##### Request
-```
-POST /api/articles/:article_id/comments
-```
-- adds a comment object with username and body to the comments table returning the object with a serialised comment_id and constituent properties
+## Update data
+- some data can be amended and updated via **PATCH**.
+- this works by reading the properties of a valid passed object and updating the respective table values corresponding to object identified by the passed identifier.
+- in this API, this is limited to incrementing/decrementing the number of votes on an article or comment via their respective identifier, intended to support upvote/downvote behaviours.
 
-### Delete a comment
-##### Request
-```
-DELETE /api/comments/:comment_id
-```
-- deletes the comment corresponding to the comment_id supplied.
+## Add data
+- new data can be added to the *articles* and *comments* tables via **POST**.
+- in this case, adding new articles and adding comments to articles is supported. 
 
-### Edit an article
-##### Request
-```
-PATCH /api/articles/:article_id
-```
-- updates the properties of an article corresponding to the article_id. Properties are updated according to the object sent in the request body (currenlty in the form { inc_votes: newVote }, where newVote can be a postive or negative integer)
+## Remove data
+- some data can be deleted from tables via **DELETE**.
+- similarly, the articles and comments tables support deletion requests in order to allow for deleting articles and comments on articles.
+- in the event an article is deleted from the articles table, the corresponding comments on said article are also deleted from the comments table
 
