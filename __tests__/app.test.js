@@ -6,8 +6,7 @@ const seed = require("../db/seeds/seed");
 const endpointsData = require('../endpoints.json')
 const { checkArticleExists } = require('../models/articles.model')
 const { checkCommentExists } = require('../models/comments.model');
-const comments = require("../db/data/test-data/comments");
-
+const articles = require("../db/data/test-data/articles");
 
 beforeEach(() => {
     return seed(data);
@@ -16,7 +15,6 @@ beforeEach(() => {
 afterAll(() => {
     db.end();
 });
-
 
 describe('/api/topics', () => {
     describe('GET /api/topics', () => {
@@ -56,7 +54,6 @@ describe('/api/topics', () => {
                     expect(typeof topic.slug).toBe('string')
                 })
         })
-
         test('POST 201 /api/topics - ignores extra keys', () => {
             return request(app)
                 .post('/api/topics')
@@ -94,7 +91,6 @@ describe('/api/topics', () => {
         })
     })
 });
-
 describe('/api', () => {
     test('GET 200 /api', () => {
         return request(app)
@@ -114,7 +110,6 @@ describe('/api', () => {
                 expect(msg).toBe('Bad method')
             })
     });
-
     test('GET 404 /api/notARoute', () => {
         return request(app)
             .get('/api/notARoute')
@@ -124,7 +119,6 @@ describe('/api', () => {
             })
     });
 });
-
 describe('/api/articles', () => {
     describe('GET /api/articles', () => {
         test('GET 200 /api/articles', () => {
@@ -166,7 +160,6 @@ describe('/api/articles', () => {
                         expect(articles).toBeSorted({ key: "created_at", descending: true })
                     })
             });
-
             test('GET 400 /api/articles?tpic=mitch - bad query', () => {
                 return request(app)
                     .get('/api/articles?tpic=mitch')
@@ -175,7 +168,6 @@ describe('/api/articles', () => {
                         expect(msg).toBe('Invalid input')
                     })
             });
-
             test('GET 404 /api/articles?topic=squidward- topic does not exist', () => {
                 return request(app)
                     .get('/api/articles?topic=squidward')
@@ -194,8 +186,7 @@ describe('/api/articles', () => {
                         expect(articles).toBeSorted({ key: "votes", descending: true })
                     })
             });
-
-            test('GET 200 /api/articles?sort_by=comment_count - testing aggregate column', () => {
+            test('GET 200 /api/articles?sort_by=comment_count - testing handling of topic =comment_count,as it is an aggregate column', () => {
                 return request(app)
                     .get('/api/articles?sort_by=comment_count')
                     .expect(200)
@@ -203,7 +194,6 @@ describe('/api/articles', () => {
                         expect(articles).toBeSorted({ key: "comment_count", descending: true })
                     })
             });
-
             test('GET 404 /api/articles?sort_by= - column to sort_by does not exist', () => {
                 return request(app)
                     .get('/api/articles?sort_by=elephant')
@@ -213,8 +203,7 @@ describe('/api/articles', () => {
 
                     })
             });
-
-            test('GET 200 /api/articles?order=asc - happy path', () => {
+            test('GET 200 /api/articles?order=asc - sorts in ascending order when instructed', () => {
                 return request(app)
                     .get('/api/articles?order=asc')
                     .expect(200)
@@ -222,8 +211,7 @@ describe('/api/articles', () => {
                         expect(articles).toBeSorted({ descending: false })
                     })
             });
-
-            test('GET 200 /api/articles?order=desc - do nothing, default behaviour', () => {
+            test('GET 200 /api/articles?order=desc - do nothing, default behaviour is to sort in descening order', () => {
                 return request(app)
                     .get('/api/articles?order=desc')
                     .expect(200)
@@ -231,7 +219,6 @@ describe('/api/articles', () => {
                         expect(articles).toBeSorted({ descending: true })
                     })
             });
-
             test('GET 400 /api/articles?order=bad - invalid order value', () => {
                 return request(app)
                     .get('/api/articles?order=bad')
@@ -240,9 +227,30 @@ describe('/api/articles', () => {
                         expect(msg).toBe('Invalid input')
                     })
             });
-
-
-
+        })
+        describe('GET /api/articles?<combination> - handles multiple simultaneous queries', () => {
+            test('GET 200 /api/articles?order=ASC&topic=mitch - handles 2 simultaneous queries', () => {
+                return request(app)
+                    .get('/api/articles?order=ASC&topic=mitch')
+                    .expect(200)
+                    .then(({ body: { articles } }) => {
+                        expect(articles).toBeSorted({ descending: false })
+                        articles.forEach((article) => {
+                            expect(article.topic).toBe('mitch')
+                        })
+                    })
+            })
+            test('GET 200 /api/articles?order=ASC&topic=mitch - handles multiple simultaneous queries', () => {
+                return request(app)
+                    .get('/api/articles?order=ASC&topic=mitch&sort_by=votes')
+                    .expect(200)
+                    .then(({ body: { articles } }) => {
+                        expect(articles).toBeSorted({ descending: false, key: 'votes' })
+                        articles.forEach((article) => {
+                            expect(article.topic).toBe('mitch')
+                        })
+                    })
+            })
 
         })
         describe('GET /api/articles?limit=?p= - FEATURE REQUEST - PAGINATION', () => {
@@ -415,9 +423,7 @@ describe('/api/articles/:article_id', () => {
                     expect(body.votes).toBe(100)
                     expect(body.article_img_url).toBe("https://images.pexels.com/photos/158651/news-newsletter-newspaper-information-158651.jpeg?w=700&h=700")
                 })
-
         });
-
         test('GET 200 /api/articles/1 - feature request, includes comment_count', () => {
             return request(app)
                 .get('/api/articles/1')
@@ -433,19 +439,15 @@ describe('/api/articles/:article_id', () => {
                     expect(body.article_img_url).toBe("https://images.pexels.com/photos/158651/news-newsletter-newspaper-information-158651.jpeg?w=700&h=700")
                     expect(body.comment_count).toBe(11)
                 })
-
         });
-
         test('GET 400 /api/articles/:article_id', () => {
             return request(app)
                 .get('/api/articles/cat')
                 .expect(400)
                 .then(({ body: { msg } }) => {
                     expect(msg).toBe('Invalid input')
-
                 })
         });
-
         test('GET 404 /api/articles/:article_id', () => {
             return request(app)
                 .get('/api/articles/69')
@@ -456,7 +458,6 @@ describe('/api/articles/:article_id', () => {
                 })
         });
     })
-
     describe('PATCH /api/articles/:article_id', () => {
         test('PATCH 200 /api/articles/1', () => {
             return request(app)
@@ -472,7 +473,6 @@ describe('/api/articles/:article_id', () => {
                     expect(article.created_at).toBe("2020-07-09T20:11:00.000Z")
                     expect(article.votes).toBe(101)
                     expect(article.article_img_url).toBe("https://images.pexels.com/photos/158651/news-newsletter-newspaper-information-158651.jpeg?w=700&h=700")
-
                 })
         })
         test('PATCH 200 /api/articles/1 - happy path', () => {
@@ -489,10 +489,8 @@ describe('/api/articles/:article_id', () => {
                     expect(article.created_at).toBe("2020-07-09T20:11:00.000Z")
                     expect(article.votes).toBe(0)
                     expect(article.article_img_url).toBe("https://images.pexels.com/photos/158651/news-newsletter-newspaper-information-158651.jpeg?w=700&h=700")
-
                 })
         })
-
         test('PATCH 200 /api/articles/1 - ignores aditional keys in req body', () => {
             return request(app)
                 .patch('/api/articles/1')
@@ -511,10 +509,8 @@ describe('/api/articles/:article_id', () => {
                     expect(article.created_at).toBe("2020-07-09T20:11:00.000Z")
                     expect(article.votes).toBe(0)
                     expect(article.article_img_url).toBe("https://images.pexels.com/photos/158651/news-newsletter-newspaper-information-158651.jpeg?w=700&h=700")
-
                 })
         })
-
         test('PATCH 400 /api/articles/cat - invalid id', () => {
             return request(app)
                 .patch('/api/articles/cat')
@@ -524,7 +520,6 @@ describe('/api/articles/:article_id', () => {
                     expect(msg).toBe('Invalid input')
                 })
         });
-
         test('PATCH 400 /api/articles/1 - bad req body, missing key', () => {
             return request(app)
                 .patch('/api/articles/1')
@@ -534,7 +529,6 @@ describe('/api/articles/:article_id', () => {
                     expect(msg).toBe('Invalid input')
                 })
         });
-
         test('PATCH 400 /api/articles/1 - bad req body, value not INT', () => {
             return request(app)
                 .patch('/api/articles/1')
@@ -544,8 +538,6 @@ describe('/api/articles/:article_id', () => {
                     expect(msg).toBe('Invalid input')
                 })
         });
-
-
         test('PATCH 404 /api/articles/69', () => {
             return request(app)
                 .patch('/api/articles/69')
@@ -565,7 +557,6 @@ describe('/api/articles/:article_id', () => {
                     expect(body).toEqual({})
                 })
         })
-
         test('DELETE 404 /api/articles/69 - article does not exist', () => {
             return request(app)
                 .delete('/api/articles/69')
@@ -584,7 +575,6 @@ describe('/api/articles/:article_id', () => {
         })
     })
 })
-
 describe('/api/articles/:article_id/comments', () => {
     describe('GET /api/articles/:article_id/comments', () => {
         test('GET 200 /api/articles/1/comments', () => {
@@ -603,8 +593,7 @@ describe('/api/articles/:article_id/comments', () => {
                     })
                     expect(comments).toBeSorted({ key: 'created_at', descending: true })
                 })
-        });
-
+        })
         test('GET 404 /api/articles/69/comments - id out of range', () => {
             return request(app)
                 .get('/api/articles/69/comments')
@@ -613,7 +602,6 @@ describe('/api/articles/:article_id/comments', () => {
                     expect(msg).toBe('Not found')
                 })
         })
-
         test('GET 400 /api/articles/cat/comments - id invalid', () => {
             return request(app)
                 .get('/api/articles/cat/comments')
@@ -630,7 +618,6 @@ describe('/api/articles/:article_id/comments', () => {
                 .expect(200)
                 .then(({ body: { comments } }) => {
                     expect(comments.length <= 10).toBe(true)
-
                 })
         })
         test('GET 200 /api/articles/1/comments?limit=5&p=3 - works with varied limit and page values', () => {
@@ -682,7 +669,6 @@ describe('/api/articles/:article_id/comments', () => {
                 })
         })
     })
-
     describe('POST /api/articles/:article_id/comments', () => {
         test('POST 201 /api/articles/1/comments - happy path', () => {
             return request(app)
@@ -702,7 +688,6 @@ describe('/api/articles/:article_id/comments', () => {
                     expect(typeof comment.created_at).toBe('string')
                 })
         })
-
         test('POST 400 /api/articles/cat/comments - invalid id', () => {
             return request(app)
                 .post('/api/articles/cat/comments')
@@ -715,7 +700,6 @@ describe('/api/articles/:article_id/comments', () => {
                     expect(msg).toBe('Invalid input')
                 })
         })
-
         test('POST 400 /api/articles/1/comments - broken req body', () => {
             return request(app)
                 .post('/api/articles/1/comments')
@@ -728,7 +712,6 @@ describe('/api/articles/:article_id/comments', () => {
                     expect(msg).toBe('Invalid input')
                 })
         })
-
         test('POST 404 /api/articles/69/comments - id out of range', () => {
             return request(app)
                 .post('/api/articles/69/comments')
@@ -741,7 +724,6 @@ describe('/api/articles/:article_id/comments', () => {
                     expect(msg).toBe('Not found')
                 })
         })
-
         test('POST 404 /api/articles/1/comments - author not in db (fkey violation)', () => {
             return request(app)
                 .post('/api/articles/1/comments')
@@ -756,7 +738,6 @@ describe('/api/articles/:article_id/comments', () => {
         })
     })
 })
-
 describe('checkArticleExists', () => {
     test('should return a 404 if article_id is not present in table', () => {
         checkArticleExists(69)
@@ -766,14 +747,12 @@ describe('checkArticleExists', () => {
                 expect(err.status).toBe(404)
             })
     })
-
     test('should return undefined if article_id is present in table', () => {
         checkArticleExists(1)
             .then((result) => {
                 expect(result).toBe(undefined)
             })
     });
-
     test('should return a 400 if article_id is not valid', () => {
         checkArticleExists('cat')
             .catch((err) => {
@@ -782,10 +761,7 @@ describe('checkArticleExists', () => {
                 expect(err.status).toBe(400)
             })
     });
-
-
 });
-
 describe('checkCommentExists', () => {
     test('should return a 404 if comment_id is not present in table', () => {
         checkCommentExists(69)
@@ -795,14 +771,12 @@ describe('checkCommentExists', () => {
                 expect(err.status).toBe(404)
             })
     })
-
     test('should return undefined if comment_id is present in table', () => {
         checkCommentExists(1)
             .then((result) => {
                 expect(result).toBe(undefined)
             })
     });
-
     test('should return a 400 if comment_id is not valid', () => {
         checkCommentExists('cat')
             .catch((err) => {
@@ -811,11 +785,7 @@ describe('checkCommentExists', () => {
                 expect(err.status).toBe(400)
             })
     });
-
-
 });
-
-
 describe('/api/comments/:comment_id', () => {
     describe('DELETE /api/comments/:comment_id', () => {
         test('DELETE 204 /api/comments/1', () => {
@@ -823,7 +793,6 @@ describe('/api/comments/:comment_id', () => {
                 .delete('/api/comments/1')
                 .expect(204)
         });
-
         test('DELETE 404 /api/comments/69', () => {
             return request(app)
                 .delete('/api/comments/69')
@@ -832,7 +801,6 @@ describe('/api/comments/:comment_id', () => {
                     expect(msg).toBe('Not found')
                 })
         });
-
         test('DELETE 400 /api/comments/cat', () => {
             return request(app)
                 .delete('/api/comments/cat')
@@ -841,8 +809,6 @@ describe('/api/comments/:comment_id', () => {
                     expect(msg).toBe('Invalid input')
                 })
         });
-
-
     });
     describe('PATCH /api/comments/:comment_id', () => {
         test('PATCH 200 /api/comments/1', () => {
@@ -888,8 +854,6 @@ describe('/api/comments/:comment_id', () => {
                     expect(comment.malicious_key).toBe(undefined)
                 })
         })
-
-
         test('PATCH 404 /api/comments/69 - comment_id does not exist', () => {
             return request(app)
                 .patch('/api/comments/69')
@@ -917,10 +881,8 @@ describe('/api/comments/:comment_id', () => {
                     expect(msg).toBe('Bad method')
                 })
         })
-
     });
 })
-
 describe('/api/users', () => {
     describe('GET /api/users', () => {
         test('GET 200 /api/users', () => {
@@ -934,10 +896,8 @@ describe('/api/users', () => {
                         expect(typeof user.name).toBe('string')
                         expect(typeof user.avatar_url).toBe('string')
                     })
-
                 })
         });
-
         test('PATCH 405 /api/users', () => {
             return request(app)
                 .patch('/api/users')
@@ -947,11 +907,6 @@ describe('/api/users', () => {
                 })
         })
     });
-
-
-
-
-
     describe('GET /api/users/:username', () => {
         test('GET 200 /api/users/butter_bridge', () => {
             return request(app)
@@ -961,10 +916,8 @@ describe('/api/users', () => {
                     expect(user.username).toBe('butter_bridge')
                     expect(user.name).toBe('jonny')
                     expect(user.avatar_url).toBe('https://www.healthytherapies.com/wp-content/uploads/2016/06/Lime3.jpg')
-
                 })
         })
-
         test('GET 404 /api/users/notauser', () => {
             return request(app)
                 .get('/api/users/notauser')
@@ -972,7 +925,6 @@ describe('/api/users', () => {
                 .then(({ body: { msg } }) => {
                     expect(msg).toBe('Not found')
                 })
-
         })
         test('PATCH 405 /api/users/butter_bridge', () => {
             return request(app)
@@ -981,7 +933,6 @@ describe('/api/users', () => {
                 .then(({ body: { msg } }) => {
                     expect(msg).toBe('Bad method')
                 })
-
         })
         test('DELETE 405 /api/users/butter_bridge', () => {
             return request(app)
@@ -991,7 +942,6 @@ describe('/api/users', () => {
                     expect(msg).toBe('Bad method')
                 })
         })
-
     })
 });
 

@@ -65,15 +65,11 @@ exports.fetchArticles = (query) => {
         }
 
         if (order) {
-            if (!orderValues.includes(order)) {
-                return Promise.reject({ status: 400, msg: "Invalid input" })
-            }
-            if (order === 'ASC' || order === 'asc') {
-                orderByString = ` ORDER BY articles.created_at ASC`
-
-            }
-
+            if (!orderValues.includes(order)) { return Promise.reject({ status: 400, msg: "Invalid input" }) }
+            orderByString = ` ORDER BY articles.${sort_by || 'created_at'} ${order}`
         }
+
+
         if (topic) {
             queryString = ` WHERE topic = '${topic}'`
         }
