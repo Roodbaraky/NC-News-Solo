@@ -19,28 +19,80 @@ afterAll(() => {
 
 
 describe('/api/topics', () => {
-    test('GET 200 /api/topics', () => {
-        return request(app)
-            .get('/api/topics')
-            .expect(200)
-            .then(({ body: { topics } }) => {
-                expect(topics.length).toBe(3)
-                topics.forEach((topic) => {
+    describe('GET /api/topics', () => {
+        test('GET 200 /api/topics', () => {
+            return request(app)
+                .get('/api/topics')
+                .expect(200)
+                .then(({ body: { topics } }) => {
+                    expect(topics.length).toBe(3)
+                    topics.forEach((topic) => {
+                        expect(typeof topic.description).toBe('string')
+                        expect(typeof topic.slug).toBe('string')
+                    })
+                })
+        });
+        test('GET 405 /api/topics - bad method', () => {
+            return request(app)
+                .patch('/api/topics')
+                .send({})
+                .expect(405)
+                .then(({ body: { msg } }) => {
+                    expect(msg).toBe('Bad method')
+                })
+        });
+    })
+    describe.only('POST /api/topics', () => {
+        test('POST 201 /api/topics', () => {
+            return request(app)
+                .post('/api/topics')
+                .send({
+                    "slug": "topic name here",
+                    "description": "description here"
+                })
+                .expect(201)
+                .then(({ body: { topic } }) => {
                     expect(typeof topic.description).toBe('string')
                     expect(typeof topic.slug).toBe('string')
                 })
-            })
-    });
-    test('GET 405 /api/topics - bad method', () => {
-        return request(app)
-            .patch('/api/topics')
-            .send({})
-            .expect(405)
-            .then(({ body: { msg } }) => {
-                expect(msg).toBe('Bad method')
-            })
-    });
+        })
 
+        test('POST 201 /api/topics - ignores extra keys', () => {
+            return request(app)
+                .post('/api/topics')
+                .send({
+                    "slug": "topic name here",
+                    "description": "description here",
+                    "maliciouskey": 'im malicious'
+                })
+                .expect(201)
+                .then(({ body: { topic } }) => {
+                    expect(typeof topic.description).toBe('string')
+                    expect(typeof topic.slug).toBe('string')
+                    expect(topic.hasOwnProperty("maliciouskey")).toBe(false)
+                })
+        })
+        test('POST 400 /api/topics - malformed body/missing keys', () => {
+            return request(app)
+                .post('/api/topics')
+                .send({
+                    "sloog": "topic name here",
+                    "desc": "description here"
+                })
+                .expect(400)
+                .then(({ body: { msg } }) => {
+                    expect(msg).toBe('Invalid input')
+                })
+        })
+        test('POST 400 /api/topics - missing body', () => {
+            return request(app)
+                .post('/api/topics')
+                .expect(400)
+                .then(({ body: { msg } }) => {
+                    expect(msg).toBe('Invalid input')
+                })
+        })
+    })
 });
 
 describe('/api', () => {
