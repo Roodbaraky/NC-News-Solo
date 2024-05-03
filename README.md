@@ -1,6 +1,6 @@
 # Northcoders News API
 ## Summary
-The Northcoders News (NC News) API is a back-end interface built to power a reddit-like news app: NC News.
+The [Northcoders News (NC News) API](https://nc-news-solo-kr.onrender.com/api) is a back-end interface built to power a reddit-like news app: NC News.
 The API is built using the Express.js and Node.js frameworks and is powered by a PostgreSQL database in conjunction with ElephantSQL and Render for live hosting.
 
 
