@@ -23,7 +23,7 @@ exports.fetchArticles = (query) => {
     FROM articles
     LEFT JOIN comments
     ON comments.article_id=articles.article_id`
-    
+
     const SQLString2 = `
         SELECT
         COUNT(comments.article_id)::INTEGER AS comment_count
@@ -114,9 +114,7 @@ exports.fetchArticlesById = (article_id) => {
 }
 
 exports.checkArticleExists = (article_id) => {
-    if (isNaN(+article_id)) {
-        return err400()
-    }
+    if (isNaN(+article_id)) { return err400() }
     return db.query(`
     SELECT *
     FROM articles
