@@ -239,10 +239,22 @@ describe('/api/articles', () => {
                             expect(article.topic).toBe('mitch')
                         })
                     })
+
             })
             test('GET 200 /api/articles?order=ASC&topic=mitch - handles multiple simultaneous queries', () => {
                 return request(app)
                     .get('/api/articles?order=ASC&topic=mitch&sort_by=votes')
+                    .expect(200)
+                    .then(({ body: { articles } }) => {
+                        expect(articles).toBeSorted({ descending: false, key: 'votes' })
+                        articles.forEach((article) => {
+                            expect(article.topic).toBe('mitch')
+                        })
+                    })
+            })
+            test('GET 200 /api/articles?order=ASC&topic=mitch&sort_by=comment_count - handles multiple simultaneous queries', () => {
+                return request(app)
+                    .get('/api/articles?order=ASC&topic=mitch&sort_by=comment_count')
                     .expect(200)
                     .then(({ body: { articles } }) => {
                         expect(articles).toBeSorted({ descending: false, key: 'votes' })

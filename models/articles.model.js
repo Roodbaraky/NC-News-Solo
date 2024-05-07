@@ -1,4 +1,5 @@
 const db = require('../db/connection')
+const { sort } = require('../db/data/test-data/articles')
 const { err404, err400 } = require('../errors/index')
 const queries = [
     "author",
@@ -54,7 +55,8 @@ exports.fetchArticles = (query) => {
 
         if (order) {
             if (!orderValues.includes(order)) { return err400() }
-            orderByString = ` ORDER BY articles.${sort_by || 'created_at'} ${order}`
+           
+            orderByString = ` ORDER BY ${sort_by && sort_by !== 'comment_count' ? `articles.${sort_by}`:sort_by || 'created_at'} ${order}`
         }
 
         if (topic) {
