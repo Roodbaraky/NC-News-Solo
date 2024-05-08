@@ -1,5 +1,5 @@
 
-const { deleteCommentById, updateCommentById, checkCommentExists } = require('../models/comments.model')
+const { deleteCommentById, updateCommentById, checkCommentExists, fetchCommentsByAuthor } = require('../models/comments.model')
 
 exports.removeCommentById = (req, res, next) => {
     const { comment_id } = req.params
@@ -19,4 +19,13 @@ exports.editCommentById = (req, res, next) => {
         })
         .catch(next)
 
+}
+
+exports.getCommentsByAuthor = (req,res,next) =>{
+    const {author} = req.params
+    fetchCommentsByAuthor(author)
+        .then((comments) => {
+            res.status(200).send({comments});
+        })
+        .catch(next);
 }

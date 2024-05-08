@@ -29,3 +29,13 @@ exports.checkCommentExists = (comment_id) => {
             }
         })
 }
+
+exports.fetchCommentsByAuthor = (author) =>{
+    return db.query(`SELECT * FROM comments WHERE author = $1`, [author])
+    .then(({ rows }) => {
+        if (!rows.length) {
+            return Promise.reject({ status: 404, msg: "Not found" })
+        }
+        return rows
+    })
+}

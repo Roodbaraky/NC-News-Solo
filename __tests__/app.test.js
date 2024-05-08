@@ -797,102 +797,134 @@ describe('checkCommentExists', () => {
             })
     });
 });
-describe('/api/comments/:comment_id', () => {
-    describe('DELETE /api/comments/:comment_id', () => {
-        test('DELETE 204 /api/comments/1', () => {
+describe('api/comments', () => {
+    describe('GET /api/comments/by/:author', () => {
+        test('GET 200 /api/comments/by/icellusedkars', () => {
             return request(app)
-                .delete('/api/comments/1')
-                .expect(204)
-        });
-        test('DELETE 404 /api/comments/69', () => {
+                .get('/api/comments/by/icellusedkars')
+                .expect(200)
+                .then(( {body:{comments}} ) => {
+                    expect(Array.isArray(comments)).toBe(true)
+                    comments.forEach((comment)=>{
+                         expect(comment.author).toBe('icellusedkars')
+                         expect(typeof comment.comment_id).toBe('number')
+                         expect(typeof comment.body).toBe('string')
+                         expect(typeof comment.article_id).toBe('number')
+                         expect(typeof comment.votes).toBe('number')
+                         expect(typeof comment.created_at).toBe('string')
+                    })
+                })
+        })
+        test('GET 404 /api/comments/by/cats',()=>{
             return request(app)
-                .delete('/api/comments/69')
+                .get('/api/comments/by/cats')
                 .expect(404)
-                .then(({ body: { msg } }) => {
-                    expect(msg).toBe('Not found')
-                })
-        });
-        test('DELETE 400 /api/comments/cat', () => {
-            return request(app)
-                .delete('/api/comments/cat')
-                .expect(400)
-                .then(({ body: { msg } }) => {
-                    expect(msg).toBe('Invalid input')
-                })
-        });
-    });
-    describe('PATCH /api/comments/:comment_id', () => {
-        test('PATCH 200 /api/comments/1', () => {
-            return request(app)
-                .patch('/api/comments/1')
-                .send({ inc_votes: 1 })
-                .expect(200)
-                .then(({ body: { comment } }) => {
-                    expect(comment.votes).toBe(17)
-                    expect(comment.comment_id).toBe(1)
-                    expect(comment.body).toBe("Oh, I've got compassion running out of my nose, pal! I'm the Sultan of Sentiment!")
-                    expect(comment.author).toBe("butter_bridge")
-                    expect(comment.article_id).toBe(9)
-                    expect(comment.created_at).toBe("2020-04-06T12:17:00.000Z")
-                })
         })
-        test('PATCH 200 /api/comments/1 - negative inc_votes', () => {
+        test('POST 405 /api/comments/by/icellusedkars',()=>{
             return request(app)
-                .patch('/api/comments/1')
-                .send({ inc_votes: -1 })
-                .expect(200)
-                .then(({ body: { comment } }) => {
-                    expect(comment.votes).toBe(15)
-                    expect(comment.comment_id).toBe(1)
-                    expect(comment.body).toBe("Oh, I've got compassion running out of my nose, pal! I'm the Sultan of Sentiment!")
-                    expect(comment.author).toBe("butter_bridge")
-                    expect(comment.article_id).toBe(9)
-                    expect(comment.created_at).toBe("2020-04-06T12:17:00.000Z")
-                })
-        })
-        test('PATCH 200 /api/comments/1 - ignores extra keys', () => {
-            return request(app)
-                .patch('/api/comments/1')
-                .send({ inc_votes: -1, malicious_key: 69 })
-                .expect(200)
-                .then(({ body: { comment } }) => {
-                    expect(comment.votes).toBe(15)
-                    expect(comment.comment_id).toBe(1)
-                    expect(comment.body).toBe("Oh, I've got compassion running out of my nose, pal! I'm the Sultan of Sentiment!")
-                    expect(comment.author).toBe("butter_bridge")
-                    expect(comment.article_id).toBe(9)
-                    expect(comment.created_at).toBe("2020-04-06T12:17:00.000Z")
-                    expect(comment.malicious_key).toBe(undefined)
-                })
-        })
-        test('PATCH 404 /api/comments/69 - comment_id does not exist', () => {
-            return request(app)
-                .patch('/api/comments/69')
-                .send({ inc_votes: 1 })
-                .expect(404)
-                .then(({ body: { msg } }) => {
-                    expect(msg).toBe('Not found')
-                })
-        })
-        test('PATCH 400 /api/comments/cat - comment_id invalid', () => {
-            return request(app)
-                .patch('/api/comments/cat')
-                .send({ inc_votes: 1 })
-                .expect(400)
-                .then(({ body: { msg } }) => {
-                    expect(msg).toBe('Invalid input')
-                })
-        })
-        test('PUT 405 /api/comments/1 - bad method', () => {
-            return request(app)
-                .put('/api/comments/1')
-                .send({ inc_votes: 1 })
+                .post('/api/comments/by/')
                 .expect(405)
-                .then(({ body: { msg } }) => {
-                    expect(msg).toBe('Bad method')
-                })
         })
-    });
+    })
+
+
+    describe('/api/comments/:comment_id', () => {
+        describe('DELETE /api/comments/:comment_id', () => {
+            test('DELETE 204 /api/comments/1', () => {
+                return request(app)
+                    .delete('/api/comments/1')
+                    .expect(204)
+            });
+            test('DELETE 404 /api/comments/69', () => {
+                return request(app)
+                    .delete('/api/comments/69')
+                    .expect(404)
+                    .then(({ body: { msg } }) => {
+                        expect(msg).toBe('Not found')
+                    })
+            });
+            test('DELETE 400 /api/comments/cat', () => {
+                return request(app)
+                    .delete('/api/comments/cat')
+                    .expect(400)
+                    .then(({ body: { msg } }) => {
+                        expect(msg).toBe('Invalid input')
+                    })
+            });
+        });
+        describe('PATCH /api/comments/:comment_id', () => {
+            test('PATCH 200 /api/comments/1', () => {
+                return request(app)
+                    .patch('/api/comments/1')
+                    .send({ inc_votes: 1 })
+                    .expect(200)
+                    .then(({ body: { comment } }) => {
+                        expect(comment.votes).toBe(17)
+                        expect(comment.comment_id).toBe(1)
+                        expect(comment.body).toBe("Oh, I've got compassion running out of my nose, pal! I'm the Sultan of Sentiment!")
+                        expect(comment.author).toBe("butter_bridge")
+                        expect(comment.article_id).toBe(9)
+                        expect(comment.created_at).toBe("2020-04-06T12:17:00.000Z")
+                    })
+            })
+            test('PATCH 200 /api/comments/1 - negative inc_votes', () => {
+                return request(app)
+                    .patch('/api/comments/1')
+                    .send({ inc_votes: -1 })
+                    .expect(200)
+                    .then(({ body: { comment } }) => {
+                        expect(comment.votes).toBe(15)
+                        expect(comment.comment_id).toBe(1)
+                        expect(comment.body).toBe("Oh, I've got compassion running out of my nose, pal! I'm the Sultan of Sentiment!")
+                        expect(comment.author).toBe("butter_bridge")
+                        expect(comment.article_id).toBe(9)
+                        expect(comment.created_at).toBe("2020-04-06T12:17:00.000Z")
+                    })
+            })
+            test('PATCH 200 /api/comments/1 - ignores extra keys', () => {
+                return request(app)
+                    .patch('/api/comments/1')
+                    .send({ inc_votes: -1, malicious_key: 69 })
+                    .expect(200)
+                    .then(({ body: { comment } }) => {
+                        expect(comment.votes).toBe(15)
+                        expect(comment.comment_id).toBe(1)
+                        expect(comment.body).toBe("Oh, I've got compassion running out of my nose, pal! I'm the Sultan of Sentiment!")
+                        expect(comment.author).toBe("butter_bridge")
+                        expect(comment.article_id).toBe(9)
+                        expect(comment.created_at).toBe("2020-04-06T12:17:00.000Z")
+                        expect(comment.malicious_key).toBe(undefined)
+                    })
+            })
+            test('PATCH 404 /api/comments/69 - comment_id does not exist', () => {
+                return request(app)
+                    .patch('/api/comments/69')
+                    .send({ inc_votes: 1 })
+                    .expect(404)
+                    .then(({ body: { msg } }) => {
+                        expect(msg).toBe('Not found')
+                    })
+            })
+            test('PATCH 400 /api/comments/cat - comment_id invalid', () => {
+                return request(app)
+                    .patch('/api/comments/cat')
+                    .send({ inc_votes: 1 })
+                    .expect(400)
+                    .then(({ body: { msg } }) => {
+                        expect(msg).toBe('Invalid input')
+                    })
+            })
+            test('PUT 405 /api/comments/1 - bad method', () => {
+                return request(app)
+                    .put('/api/comments/1')
+                    .send({ inc_votes: 1 })
+                    .expect(405)
+                    .then(({ body: { msg } }) => {
+                        expect(msg).toBe('Bad method')
+                    })
+            })
+        });
+    })
 })
 describe('/api/users', () => {
     describe('GET /api/users', () => {
